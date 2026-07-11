@@ -14,7 +14,7 @@ services:
       - ./scripts:/srv/app/scripts
 
   postgres-zoom:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
     container_name: postgres-zoom
     env_file: .env
     ports:

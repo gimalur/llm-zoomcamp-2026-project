@@ -7,7 +7,8 @@ Stub scaffold for an LLM Zoomcamp project: RAG-style course assistant with a cha
 - **uv** - Python dependency management
 - **Chainlit** - chat UI (`chat-zoom` container, port 8001 on host)
 - **LangGraph** - agent framework (installed, not wired in yet)
-- **PostgreSQL** - conversation storage (`postgres-zoom` container, port 5433 on host)
+- **PostgreSQL + pgvector** - conversation storage and article embeddings (`postgres-zoom` container, port 5433 on host)
+- **fastembed** - lightweight (ONNX, no PyTorch) embeddings using `all-MiniLM-L6-v2`
 - **Grafana** - monitoring dashboards (`grafana-zoom` container, port 3001 on host)
 - **Docker Compose** - orchestration
 
@@ -50,6 +51,14 @@ The chat header has two screen-level links (not chat messages): **Grafana** open
 make db-seed   # fill conversations + feedback tables with fake data (Faker)
 make db-drop   # truncate both tables
 ```
+
+## Knowledge base - Wikivoyage articles
+
+```bash
+make db-ingest   # fetch a curated set of Wikivoyage destination articles and embed them
+```
+
+Fetches full article text one title at a time via the MediaWiki API (batching isn't supported for full-article extracts), embeds each with `all-MiniLM-L6-v2` via fastembed, and upserts into the `articles` table (`source`, `title`, `url`, `content`, `embedding vector(384)`). Idempotent and resumable - already-ingested titles are skipped, so a run interrupted by Wikivoyage's rate limiting can just be rerun. No chunking yet, so the embedding only reflects each article's first ~256 tokens.
 
 ## Other commands
 

@@ -1,6 +1,8 @@
 -- Schema for course assistant chat storage.
 -- Mounted into postgres container at /docker-entrypoint-initdb.d, runs on first boot only.
 
+CREATE EXTENSION IF NOT EXISTS vector;
+
 CREATE TABLE IF NOT EXISTS conversations (
     id SERIAL PRIMARY KEY,
     question TEXT NOT NULL,
@@ -29,3 +31,16 @@ CREATE TABLE IF NOT EXISTS feedback (
 
 CREATE INDEX IF NOT EXISTS idx_conversations_timestamp ON conversations (timestamp);
 CREATE INDEX IF NOT EXISTS idx_feedback_conversation_id ON feedback (conversation_id);
+
+-- Knowledge base articles, scraped from an external source (e.g. Wikivoyage).
+-- embedding is 384-dim to match the all-MiniLM-L6-v2 model (via fastembed).
+CREATE TABLE IF NOT EXISTS articles (
+    id SERIAL PRIMARY KEY,
+    source TEXT NOT NULL,
+    title TEXT NOT NULL,
+    url TEXT NOT NULL,
+    content TEXT NOT NULL,
+    embedding VECTOR(384),
+    fetched_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    UNIQUE (source, title)
+);
