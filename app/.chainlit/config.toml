@@ -78,7 +78,10 @@ reaction_on_message_received = false
 
 [UI]
 # Name of the assistant.
-name = "Course Assistant"
+name = "ZoomCamp Travel Assistant"
+
+# Custom CSS to size up the logo (default renders it at a fixed 200px).
+custom_css = "/public/custom.css"
 
 # Whether to prompt user confirmation on clicking 'New Chat'
 confirm_new_chat = true

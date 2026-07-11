@@ -1,0 +1,10 @@
+<svg width="1700" height="220" viewBox="0 0 1700 220" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="#2E8B57" stroke-width="10" stroke-linecap="round">
+    <circle cx="100" cy="110" r="70"/>
+    <ellipse cx="100" cy="110" rx="30" ry="70"/>
+    <line x1="30" y1="110" x2="170" y2="110"/>
+    <path d="M45 65 Q100 90 155 65"/>
+    <path d="M45 155 Q100 130 155 155"/>
+  </g>
+  <text x="200" y="150" font-family="Inter, Arial, sans-serif" font-size="100" font-weight="700" fill="#1A1A1A" textLength="1450" lengthAdjust="spacingAndGlyphs">ZoomCamp Travel Assistant</text>
+</svg>
