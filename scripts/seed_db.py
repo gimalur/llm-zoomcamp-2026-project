@@ -1,6 +1,5 @@
 import os
 import random
-import uuid
 
 import psycopg2
 from dotenv import load_dotenv
@@ -9,8 +8,12 @@ from faker import Faker
 load_dotenv()
 fake = Faker()
 
-N_SESSIONS = 20
-MAX_TURNS_PER_SESSION = 6
+N_CONVERSATIONS = 50
+
+COURSES = ["llm-zoomcamp", "data-engineering-zoomcamp", "mlops-zoomcamp"]
+MODELS = ["gpt-4o-mini", "gpt-4o", "gemini-1.5-flash"]
+SOURCES = ["user", "auto"]
+RELEVANCE_LEVELS = ["RELEVANT", "PARTLY_RELEVANT", "NON_RELEVANT"]
 
 
 def get_connection():
@@ -24,35 +27,50 @@ def get_connection():
 
 def seed(conn) -> None:
     with conn.cursor() as cur:
-        for _ in range(N_SESSIONS):
-            session_id = str(uuid.uuid4())
-            for _ in range(random.randint(1, MAX_TURNS_PER_SESSION)):
+        for _ in range(N_CONVERSATIONS):
+            prompt_tokens = random.randint(50, 500)
+            completion_tokens = random.randint(20, 300)
+
+            cur.execute(
+                """
+                INSERT INTO conversations (
+                    question, answer, course, model, instructions, prompt,
+                    prompt_tokens, completion_tokens, total_tokens,
+                    response_time, cost, timestamp
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, now())
+                RETURNING id
+                """,
+                (
+                    fake.sentence(),
+                    fake.paragraph(),
+                    random.choice(COURSES),
+                    random.choice(MODELS),
+                    fake.sentence(),
+                    fake.paragraph(),
+                    prompt_tokens,
+                    completion_tokens,
+                    prompt_tokens + completion_tokens,
+                    round(random.uniform(0.2, 5.0), 3),
+                    round(random.uniform(0.0001, 0.02), 6),
+                ),
+            )
+            conversation_id = cur.fetchone()[0]
+
+            if random.random() < 0.5:
                 cur.execute(
                     """
-                    INSERT INTO conversations (session_id, role, message)
-                    VALUES (%s, 'user', %s)
-                    RETURNING id
+                    INSERT INTO feedback (conversation_id, source, relevance, explanation, score, timestamp)
+                    VALUES (%s, %s, %s, %s, %s, now())
                     """,
-                    (session_id, fake.sentence()),
+                    (
+                        conversation_id,
+                        random.choice(SOURCES),
+                        random.choice(RELEVANCE_LEVELS),
+                        fake.sentence(),
+                        random.choice([-1, 1]),
+                    ),
                 )
-                conversation_id = cur.fetchone()[0]
-
-                cur.execute(
-                    """
-                    INSERT INTO conversations (session_id, role, message)
-                    VALUES (%s, 'assistant', %s)
-                    """,
-                    (session_id, fake.paragraph()),
-                )
-
-                if random.random() < 0.5:
-                    cur.execute(
-                        """
-                        INSERT INTO feedback (conversation_id, rating)
-                        VALUES (%s, %s)
-                        """,
-                        (conversation_id, random.choice([-1, 1])),
-                    )
     conn.commit()
 
 

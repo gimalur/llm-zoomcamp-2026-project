@@ -3,18 +3,29 @@
 
 CREATE TABLE IF NOT EXISTS conversations (
     id SERIAL PRIMARY KEY,
-    session_id TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
-    message TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    course TEXT NOT NULL,
+    model TEXT NOT NULL,
+    instructions TEXT NOT NULL,
+    prompt TEXT NOT NULL,
+    prompt_tokens INTEGER NOT NULL,
+    completion_tokens INTEGER NOT NULL,
+    total_tokens INTEGER NOT NULL,
+    response_time FLOAT NOT NULL,
+    cost FLOAT NOT NULL,
+    timestamp TIMESTAMP WITH TIME ZONE NOT NULL
 );
-
-CREATE INDEX IF NOT EXISTS idx_conversations_session_id ON conversations (session_id);
-CREATE INDEX IF NOT EXISTS idx_conversations_created_at ON conversations (created_at);
 
 CREATE TABLE IF NOT EXISTS feedback (
     id SERIAL PRIMARY KEY,
-    conversation_id INTEGER REFERENCES conversations (id) ON DELETE CASCADE,
-    rating SMALLINT CHECK (rating IN (-1, 1)),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    conversation_id INTEGER REFERENCES conversations(id),
+    source TEXT NOT NULL,
+    relevance TEXT,
+    explanation TEXT,
+    score INTEGER,
+    timestamp TIMESTAMP WITH TIME ZONE NOT NULL
 );
+
+CREATE INDEX IF NOT EXISTS idx_conversations_timestamp ON conversations (timestamp);
+CREATE INDEX IF NOT EXISTS idx_feedback_conversation_id ON feedback (conversation_id);

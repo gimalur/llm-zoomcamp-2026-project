@@ -1,6 +1,6 @@
 # Course Assistant (LLM Zoomcamp 2026 project)
 
-Stub scaffold for an LLM Zoomcamp project: RAG-style course assistant with a chat UI, Postgres storage, and Grafana monitoring. Current iteration has no retrieval/agent logic yet - the chat just echoes messages and persists both turns to Postgres, wiring up the full stack end to end.
+Stub scaffold for an LLM Zoomcamp project: RAG-style course assistant with a chat UI, Postgres storage, and Grafana monitoring. Current iteration has no retrieval/agent logic yet - the chat just echoes messages and persists each question/answer turn to Postgres, wiring up the full stack end to end.
 
 ## Stack
 
@@ -40,7 +40,7 @@ This starts all 3 containers:
 
 Grafana default login: `admin` / `admin` (prompts for password change on first login). The Postgres datasource is auto-provisioned on startup.
 
-Open the chat UI, send a message - it gets echoed back and both turns are saved to the `conversations` table in Postgres.
+Open the chat UI, send a message - it gets echoed back and the turn is saved as a row in the `conversations` table in Postgres. Each reply has thumbs up/down buttons - voting saves a row in the `feedback` table linked to that conversation.
 
 ## Database - fake data
 
