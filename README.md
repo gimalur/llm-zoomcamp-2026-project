@@ -42,6 +42,8 @@ Grafana default login: `admin` / `admin` (prompts for password change on first l
 
 Open the chat UI, send a message - it gets echoed back and the turn is saved as a row in the `conversations` table in Postgres. Each reply has thumbs up/down buttons - voting saves a row in the `feedback` table linked to that conversation.
 
+The chat header has two screen-level links (not chat messages): **Grafana** opens the dashboard in a new tab, **Init DB** hits a route on the chat app that reseeds the database with fake data.
+
 ## Database - fake data
 
 ```bash

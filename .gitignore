@@ -5,6 +5,6 @@
 __pycache__/
 *.ipynb_checkpoints
 *.pyc
-.chainlit/
+app/.chainlit/translations/
+app/.files/
 chainlit.md
-

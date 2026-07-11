@@ -1,12 +1,37 @@
+import sys
 import time
+from pathlib import Path
 
 import chainlit as cl
+from chainlit.server import app as server
+from fastapi.responses import PlainTextResponse
 
-from db import save_conversation, save_feedback
+from db import save_conversation, save_feedback, get_connection
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.seed_db import seed as seed_conversations  # noqa: E402
 
 # Stub app: echoes the user's message and stores the turn in postgres.
 # No retrieval, no LangGraph agent wired in yet - next iteration, so
 # course/model/instructions/prompt/token/cost fields are placeholders.
+
+
+@server.get("/actions/seed-db")
+async def action_seed_db():
+    # Backs the "Init DB" header link in app/.chainlit/config.toml -
+    # a screen-level control outside the chat message flow.
+    conn = get_connection()
+    try:
+        seed_conversations(conn)
+    finally:
+        conn.close()
+    return PlainTextResponse("Seeded fake conversations and feedback. You can close this tab.")
+
+
+# Chainlit's own SPA catch-all ("/{full_path:path}") is registered when
+# `chainlit.server` is imported above, so it would otherwise shadow any
+# route we add afterwards - move ours to the front of the route list.
+server.router.routes.insert(0, server.router.routes.pop())
 
 
 def make_feedback_actions(conversation_id: int) -> list[cl.Action]:
