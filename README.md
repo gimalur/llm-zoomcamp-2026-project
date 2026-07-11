@@ -39,7 +39,7 @@ This starts all 3 containers:
 | Grafana         | http://localhost:3001  |
 | Postgres        | localhost:5433          |
 
-Grafana default login: `admin` / `admin` (prompts for password change on first login). The Postgres datasource is auto-provisioned on startup.
+Grafana default login: `admin` / `admin` (prompts for password change on first login). The Postgres datasource and a "Database Tables" dashboard (raw table view of `conversations`, `feedback`, `articles`) are auto-provisioned on startup - both are files under `grafana/provisioning/`, tracked in git, so they reproduce identically on any machine without clicking through the Grafana UI.
 
 Open the chat UI, send a message - it gets echoed back and the turn is saved as a row in the `conversations` table in Postgres. Each reply has thumbs up/down buttons - voting saves a row in the `feedback` table linked to that conversation.
 

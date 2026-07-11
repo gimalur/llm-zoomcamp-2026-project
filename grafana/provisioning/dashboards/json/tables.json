@@ -1,0 +1,57 @@
+{
+  "title": "Database Tables",
+  "uid": "db-tables",
+  "editable": true,
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "table",
+      "title": "conversations",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "postgresql" },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgresql" },
+          "format": "table",
+          "rawSql": "SELECT id, question, answer, course, model, prompt_tokens, completion_tokens, total_tokens, response_time, cost, timestamp FROM conversations ORDER BY id DESC LIMIT 200",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "title": "feedback",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 9 },
+      "datasource": { "type": "postgres", "uid": "postgresql" },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgresql" },
+          "format": "table",
+          "rawSql": "SELECT id, conversation_id, source, relevance, explanation, score, timestamp FROM feedback ORDER BY id DESC LIMIT 200",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "articles",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 18 },
+      "datasource": { "type": "postgres", "uid": "postgresql" },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgresql" },
+          "format": "table",
+          "rawSql": "SELECT id, source, title, url, length(content) AS content_length, fetched_at FROM articles ORDER BY id DESC LIMIT 200",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
