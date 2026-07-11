@@ -10,13 +10,26 @@ from db import save_conversation, save_feedback, get_connection
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scripts.seed_db import seed as seed_conversations  # noqa: E402
+from scripts.ingest_wikivoyage import ingest as ingest_wikivoyage  # noqa: E402
 
 # Stub app: echoes the user's message and stores the turn in postgres.
 # No retrieval, no LangGraph agent wired in yet - next iteration, so
 # course/model/instructions/prompt/token/cost fields are placeholders.
 
 
-@server.get("/actions/seed-db")
+def custom_route(path: str):
+    # Chainlit's own SPA catch-all ("/{full_path:path}") is registered
+    # when `chainlit.server` is imported above, so it would otherwise
+    # shadow any route we add afterwards - move ours to the front.
+    def decorator(fn):
+        server.get(path)(fn)
+        server.router.routes.insert(0, server.router.routes.pop())
+        return fn
+
+    return decorator
+
+
+@custom_route("/actions/seed-db")
 async def action_seed_db():
     # Backs the "Init DB" header link in app/.chainlit/config.toml -
     # a screen-level control outside the chat message flow.
@@ -28,10 +41,17 @@ async def action_seed_db():
     return PlainTextResponse("Seeded fake conversations and feedback. You can close this tab.")
 
 
-# Chainlit's own SPA catch-all ("/{full_path:path}") is registered when
-# `chainlit.server` is imported above, so it would otherwise shadow any
-# route we add afterwards - move ours to the front of the route list.
-server.router.routes.insert(0, server.router.routes.pop())
+@custom_route("/actions/ingest-wikivoyage")
+async def action_ingest_wikivoyage():
+    # Backs the "Load Articles" header link - fetches and embeds the
+    # curated Wikivoyage article set. Can take a while (rate-limited,
+    # ~1 req/sec) and is safe to rerun: already-ingested titles are skipped.
+    conn = get_connection()
+    try:
+        n = ingest_wikivoyage(conn)
+    finally:
+        conn.close()
+    return PlainTextResponse(f"Ingested {n} new Wikivoyage articles. You can close this tab.")
 
 
 def make_feedback_actions(conversation_id: int) -> list[cl.Action]:
