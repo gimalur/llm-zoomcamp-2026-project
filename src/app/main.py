@@ -115,8 +115,9 @@ async def on_message(message: cl.Message):
     start = time.monotonic()
 
     question = message.content
-    LOGGER.debug("query={!r}", question)
-    result = answer_question(question)
+    thread_id = cl.context.session.thread_id
+    LOGGER.debug("query={!r} thread_id={}", question, thread_id)
+    result = answer_question(question, thread_id)
     answer = result["answer"]
     LOGGER.debug("answer={!r}", answer)
     sources = list(dict.fromkeys(c["title"] for c in result["chunks"]))

@@ -5,6 +5,7 @@ from functools import cache
 from langchain_core.messages import HumanMessage, SystemMessage, messages_to_dict
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, MessagesState, StateGraph
 from loguru import logger as LOGGER
 
@@ -125,15 +126,23 @@ def get_graph():
     graph.add_edge(START, "agent")
     graph.add_conditional_edges("agent", should_continue, {"tools": "tools", END: END})
     graph.add_edge("tools", "agent")
-    return graph.compile()
+    return graph.compile(checkpointer=InMemorySaver())
 
 
-def answer_question(question: str) -> RagState:
-    initial_state: RagState = {
-        "messages": [
-            SystemMessage(content=SYSTEM_PROMPT),
-            HumanMessage(content=question),
-        ],
+def answer_question(question: str, thread_id: str) -> RagState:
+    """thread_id groups messages into one persisted chat history (LangGraph checkpointer)."""
+    graph = get_graph()
+    config = {"configurable": {"thread_id": thread_id}}
+
+    history = graph.get_state(config).values.get("messages", [])
+    has_system_prompt = bool(history) and isinstance(history[0], SystemMessage)
+
+    messages = [HumanMessage(content=question)]
+    if not has_system_prompt:
+        messages.insert(0, SystemMessage(content=SYSTEM_PROMPT))
+
+    turn_input: RagState = {
+        "messages": messages,
         "chunks": [],
         "tool_rounds": 0,
         "prompt": "",
@@ -143,6 +152,6 @@ def answer_question(question: str) -> RagState:
         "total_tokens": 0,
         "cost": 0.0,
     }
-    final_state = get_graph().invoke(initial_state)
+    final_state = graph.invoke(turn_input, config)
     final_state["prompt"] = json.dumps(messages_to_dict(final_state["messages"]), indent=2)
     return final_state
