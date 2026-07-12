@@ -1,11 +1,9 @@
-import os
 import random
 
-import psycopg2
-from dotenv import load_dotenv
 from faker import Faker
 
-load_dotenv()
+from app.db import get_connection
+
 fake = Faker()
 
 N_CONVERSATIONS = 50
@@ -14,15 +12,6 @@ COURSES = ["llm-zoomcamp", "data-engineering-zoomcamp", "mlops-zoomcamp"]
 MODELS = ["gpt-4o-mini", "gpt-4o", "gemini-1.5-flash"]
 SOURCES = ["user", "auto"]
 RELEVANCE_LEVELS = ["RELEVANT", "PARTLY_RELEVANT", "NON_RELEVANT"]
-
-
-def get_connection():
-    return psycopg2.connect(
-        host=os.environ["POSTGRES_HOST"],
-        dbname=os.environ["POSTGRES_DB"],
-        user=os.environ["POSTGRES_USER"],
-        password=os.environ["POSTGRES_PASSWORD"],
-    )
 
 
 def seed(conn) -> None:

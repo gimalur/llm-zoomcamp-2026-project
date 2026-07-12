@@ -10,8 +10,7 @@ services:
       postgres-zoom:
         condition: service_healthy
     volumes:
-      - ./app:/srv/app/app
-      - ./scripts:/srv/app/scripts
+      - ./src:/srv/app/src
       - ./eval:/srv/app/eval
 
   postgres-zoom:

@@ -1,27 +1,13 @@
 import json
-import os
 from pathlib import Path
 
-import psycopg2
-from dotenv import load_dotenv
 from fastembed import TextEmbedding
 
-load_dotenv()
+from app.db import get_connection
+from config import EMBEDDING_MODEL, RRF_K, TOP_K
 
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-TOP_K = 5
-GROUND_TRUTH_PATH = Path(__file__).resolve().parent.parent / "eval" / "ground_truth.json"
-RESULTS_PATH = Path(__file__).resolve().parent.parent / "eval" / "retrieval_results.md"
-RRF_K = 60  # standard reciprocal-rank-fusion constant
-
-
-def get_connection():
-    return psycopg2.connect(
-        host=os.environ["POSTGRES_HOST"],
-        dbname=os.environ["POSTGRES_DB"],
-        user=os.environ["POSTGRES_USER"],
-        password=os.environ["POSTGRES_PASSWORD"],
-    )
+GROUND_TRUTH_PATH = Path(__file__).resolve().parent.parent.parent / "eval" / "ground_truth.json"
+RESULTS_PATH = Path(__file__).resolve().parent.parent.parent / "eval" / "retrieval_results.md"
 
 
 def vector_search(cur, query_embedding: list[float], top_k: int) -> list[int]:

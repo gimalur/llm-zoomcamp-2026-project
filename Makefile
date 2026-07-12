@@ -4,25 +4,25 @@ sync:
 	uv sync
 
 db-seed:
-	docker compose exec chat-zoom python /srv/app/scripts/seed_db.py
+	docker compose exec chat-zoom python -m scripts.seed_db
 
 db-drop:
-	docker compose exec chat-zoom python /srv/app/scripts/drop_db.py
+	docker compose exec chat-zoom python -m scripts.drop_db
 
 db-clear:
-	docker compose exec chat-zoom python /srv/app/scripts/clear_db.py
+	docker compose exec chat-zoom python -m scripts.clear_db
 
 db-ingest:
-	docker compose exec chat-zoom python /srv/app/scripts/ingest_wikivoyage.py
+	docker compose exec chat-zoom python -m scripts.ingest_wikivoyage
 
 eval-questions:
-	docker compose exec chat-zoom python /srv/app/scripts/generate_eval_questions.py
+	docker compose exec chat-zoom python -m scripts.generate_eval_questions
 
 eval-retrieval:
-	docker compose exec chat-zoom python /srv/app/scripts/evaluate_retrieval.py
+	docker compose exec chat-zoom python -m scripts.evaluate_retrieval
 
 eval-llm:
-	docker compose exec chat-zoom python /srv/app/scripts/evaluate_llm.py
+	docker compose exec chat-zoom python -m scripts.evaluate_llm
 
 shell-chat:
 	docker compose exec chat-zoom bash

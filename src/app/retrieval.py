@@ -1,8 +1,7 @@
 from fastembed import TextEmbedding
 
+from config import EMBEDDING_MODEL
 from db import get_connection
-
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 _model: TextEmbedding | None = None
 

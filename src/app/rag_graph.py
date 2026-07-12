@@ -5,16 +5,8 @@ from langgraph.graph import END, START, StateGraph
 from loguru import logger
 from openai import OpenAI
 
+from config import CHAT_MODEL, PRICE_PER_COMPLETION_TOKEN, PRICE_PER_PROMPT_TOKEN, TOP_K
 from retrieval import embed_query, search
-
-MODEL = "gpt-4o-mini"
-TOP_K = 5
-
-# Approximate OpenAI gpt-4o-mini pricing, per token (check current pricing
-# before relying on this for real billing - it's illustrative for the
-# monitoring dashboard, not an invoice).
-PRICE_PER_PROMPT_TOKEN = 0.15 / 1_000_000
-PRICE_PER_COMPLETION_TOKEN = 0.60 / 1_000_000
 
 SYSTEM_PROMPT = (
     "You are a knowledge assistant. Answer the user's question using ONLY "
@@ -67,9 +59,9 @@ def build_prompt(question: str, chunks: list[dict]) -> str:
 def generate(state: RagState) -> dict:
     prompt = build_prompt(state["question"], state["chunks"])
 
-    logger.info("tool_call=generate model={} chunks={}", MODEL, len(state["chunks"]))
+    logger.info("tool_call=generate model={} chunks={}", CHAT_MODEL, len(state["chunks"]))
     response = get_client().chat.completions.create(
-        model=MODEL,
+        model=CHAT_MODEL,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt},

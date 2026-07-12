@@ -2,15 +2,12 @@ import json
 import os
 from pathlib import Path
 
-import psycopg2
-from dotenv import load_dotenv
 from openai import OpenAI
 
-load_dotenv()
+from app.db import get_connection
+from config import CHAT_MODEL, EVAL_SAMPLES_PER_DOCUMENT
 
-MODEL = "gpt-4o-mini"
-SAMPLES_PER_ARTICLE = 5
-OUTPUT_PATH = Path(__file__).resolve().parent.parent / "eval" / "ground_truth.json"
+OUTPUT_PATH = Path(__file__).resolve().parent.parent.parent / "eval" / "ground_truth.json"
 
 PROMPT_TEMPLATE = """You are generating evaluation data for a Q&A retrieval system.
 
@@ -26,15 +23,6 @@ Excerpts:
 """
 
 
-def get_connection():
-    return psycopg2.connect(
-        host=os.environ["POSTGRES_HOST"],
-        dbname=os.environ["POSTGRES_DB"],
-        user=os.environ["POSTGRES_USER"],
-        password=os.environ["POSTGRES_PASSWORD"],
-    )
-
-
 def sample_chunk_indices(n_chunks: int, n_samples: int) -> list[int]:
     if n_chunks <= n_samples:
         return list(range(n_chunks))
@@ -48,7 +36,7 @@ def generate_questions_for_article(client: OpenAI, article_title: str, chunks: l
     prompt = PROMPT_TEMPLATE.format(n=len(chunks), article_title=article_title, excerpts=excerpts)
 
     response = client.chat.completions.create(
-        model=MODEL,
+        model=CHAT_MODEL,
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"},
     )
@@ -80,7 +68,7 @@ def generate(conn, client: OpenAI) -> list[dict]:
             if not chunk_rows:
                 continue
 
-            indices = sample_chunk_indices(len(chunk_rows), SAMPLES_PER_ARTICLE)
+            indices = sample_chunk_indices(len(chunk_rows), EVAL_SAMPLES_PER_DOCUMENT)
             sampled = [chunk_rows[i] for i in indices]
 
             items = generate_questions_for_article(client, title, sampled)

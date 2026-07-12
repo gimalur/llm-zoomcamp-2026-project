@@ -1,6 +1,4 @@
-import sys
 import time
-from pathlib import Path
 
 import chainlit as cl
 from chainlit.server import app as server
@@ -9,11 +7,9 @@ from loguru import logger
 
 from db import save_conversation, save_feedback, get_connection
 from rag_graph import SYSTEM_PROMPT, answer_question
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from scripts.seed_db import seed as seed_conversations  # noqa: E402
-from scripts.ingest_wikivoyage import ingest as ingest_wikivoyage  # noqa: E402
-from scripts.clear_db import clear as clear_db  # noqa: E402
+from scripts.seed_db import seed as seed_conversations
+from scripts.ingest_wikivoyage import ingest as ingest_wikivoyage
+from scripts.clear_db import clear as clear_db
 
 # RAG travel assistant: retrieves Wikivoyage chunks (app/retrieval.py) and
 # answers with gpt-4o-mini via a LangGraph retrieve -> generate flow

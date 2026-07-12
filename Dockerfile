@@ -7,13 +7,13 @@ WORKDIR /srv/app
 COPY pyproject.toml uv.lock* ./
 RUN uv sync --no-install-project
 
-COPY app/ ./app
-COPY scripts/ ./scripts
+COPY src/ ./src
 COPY eval/ ./eval
 
 ENV PATH="/srv/app/.venv/bin:${PATH}"
+ENV PYTHONPATH="/srv/app/src"
 
-WORKDIR /srv/app/app
+WORKDIR /srv/app/src/app
 
 EXPOSE 8001
 
