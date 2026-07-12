@@ -1,15 +1,13 @@
+from functools import cache
+
 from fastembed import TextEmbedding
 
 from config import Config
 
-_model: TextEmbedding | None = None
 
-
+@cache
 def get_model() -> TextEmbedding:
-    global _model
-    if _model is None:
-        _model = TextEmbedding(model_name=Config.Embedding.MODEL)
-    return _model
+    return TextEmbedding(model_name=Config.Embedding.MODEL)
 
 
 def embed_query(text: str) -> list[float]:
