@@ -6,10 +6,13 @@ from fastapi.responses import PlainTextResponse
 from loguru import logger
 
 from db import save_conversation, save_feedback, get_connection
+from logger import init_logger
 from rag_graph import SYSTEM_PROMPT, answer_question
 from scripts.seed_db import seed as seed_conversations
 from scripts.ingest_wikivoyage import ingest as ingest_wikivoyage
 from scripts.clear_db import clear as clear_db
+
+init_logger()
 
 # RAG travel assistant: retrieves Wikivoyage chunks (app/retrieval.py) and
 # answers with gpt-4o-mini via a LangGraph retrieve -> generate flow

@@ -1,4 +1,14 @@
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 class Config:
+    class Environment:
+        ENV_TYPE = os.getenv("ENV_TYPE", "dev")
+
     class Chat:
         MODEL = "gpt-4o-mini"
 
