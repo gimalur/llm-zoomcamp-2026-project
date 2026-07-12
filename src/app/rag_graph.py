@@ -2,20 +2,19 @@ import os
 from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
-from loguru import logger
+from loguru import logger as LOGGER
 from openai import OpenAI
 
 from config import Config
 from db import get_connection, vector_search_chunks
 from embedding import embed_query
 
-SYSTEM_PROMPT = (
-    "You are a knowledge assistant. Answer the user's question using ONLY "
-    "the provided context retrieved from the database. If the context "
-    "doesn't contain the answer, say you don't know - don't make things "
-    "up. Keep answers concise and mention which source(s) the info comes "
-    "from."
-)
+SYSTEM_PROMPT = """
+    You are a knowledge assistant. Answer the user's question using ONLY 
+    the provided context retrieved from the database. If the context
+    doesn't contain the answer, say you don't have such information - don't make things
+    up. Keep answers concise and mention which source(s) the info comes from.
+""".strip()
 
 _client: OpenAI | None = None
 
@@ -39,11 +38,17 @@ class RagState(TypedDict):
 
 
 def retrieve(state: RagState) -> dict:
-    logger.info("tool_call=retrieve query={!r} top_k={}", state["question"], Config.Retrieval.TOP_K)
+    LOGGER.info(
+        "tool_call=retrieve query={!r} top_k={}",
+        state["question"],
+        Config.Retrieval.TOP_K,
+    )
     query_embedding = embed_query(state["question"])
     with get_connection() as conn:
-        chunks = vector_search_chunks(conn, query_embedding, top_k=Config.Retrieval.TOP_K)
-    logger.info(
+        chunks = vector_search_chunks(
+            conn, query_embedding, top_k=Config.Retrieval.TOP_K
+        )
+    LOGGER.info(
         "tool_call=retrieve result count={} titles={}",
         len(chunks),
         [c["title"] for c in chunks],
@@ -52,16 +57,16 @@ def retrieve(state: RagState) -> dict:
 
 
 def build_prompt(question: str, chunks: list[dict]) -> str:
-    context = "\n\n".join(
-        f"[{c['title']}] {c['content']}" for c in chunks
-    )
+    context = "\n\n".join(f"[{c['title']}] {c['content']}" for c in chunks)
     return f"Context:\n{context}\n\nQuestion: {question}"
 
 
 def generate(state: RagState) -> dict:
     prompt = build_prompt(state["question"], state["chunks"])
 
-    logger.info("tool_call=generate model={} chunks={}", Config.Chat.MODEL, len(state["chunks"]))
+    LOGGER.debug(
+        "tool_call=generate model={} chunks={}", Config.Chat.MODEL, len(state["chunks"])
+    )
     response = get_client().chat.completions.create(
         model=Config.Chat.MODEL,
         messages=[
@@ -75,7 +80,7 @@ def generate(state: RagState) -> dict:
         usage.prompt_tokens * Config.Chat.PRICE_PER_PROMPT_TOKEN
         + usage.completion_tokens * Config.Chat.PRICE_PER_COMPLETION_TOKEN
     )
-    logger.info(
+    LOGGER.debug(
         "tool_call=generate result prompt_tokens={} completion_tokens={} cost={:.6f}",
         usage.prompt_tokens,
         usage.completion_tokens,

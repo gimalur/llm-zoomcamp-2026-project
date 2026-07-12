@@ -3,7 +3,7 @@ import time
 import chainlit as cl
 from chainlit.server import app as server
 from fastapi.responses import PlainTextResponse
-from loguru import logger
+from loguru import logger as LOGGER
 
 from config import Config
 from db import save_conversation, save_feedback, get_connection
@@ -48,7 +48,9 @@ async def action_ingest_fake_db():
         ingest_fake_data(conn)
     finally:
         conn.close()
-    return PlainTextResponse("Seeded fake conversations and feedback. You can close this tab.")
+    return PlainTextResponse(
+        "Seeded fake conversations and feedback. You can close this tab."
+    )
 
 
 @custom_route(Route.INGEST_DATA)
@@ -113,10 +115,10 @@ async def on_message(message: cl.Message):
     start = time.monotonic()
 
     question = message.content
-    logger.info("query={!r}", question)
+    LOGGER.debug("query={!r}", question)
     result = answer_question(question)
     answer = result["answer"]
-
+    LOGGER.debug("answer={!r}", answer)
     sources = list(dict.fromkeys(c["title"] for c in result["chunks"]))
     if sources:
         answer += "\n\n*Sources: " + ", ".join(sources) + "*"
