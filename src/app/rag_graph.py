@@ -6,7 +6,8 @@ from loguru import logger
 from openai import OpenAI
 
 from config import Config
-from retrieval import embed_query, search
+from db import get_connection, vector_search_chunks
+from embedding import embed_query
 
 SYSTEM_PROMPT = (
     "You are a knowledge assistant. Answer the user's question using ONLY "
@@ -40,7 +41,8 @@ class RagState(TypedDict):
 def retrieve(state: RagState) -> dict:
     logger.info("tool_call=retrieve query={!r} top_k={}", state["question"], Config.Retrieval.TOP_K)
     query_embedding = embed_query(state["question"])
-    chunks = search(query_embedding, top_k=Config.Retrieval.TOP_K)
+    with get_connection() as conn:
+        chunks = vector_search_chunks(conn, query_embedding, top_k=Config.Retrieval.TOP_K)
     logger.info(
         "tool_call=retrieve result count={} titles={}",
         len(chunks),

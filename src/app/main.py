@@ -15,8 +15,8 @@ from scripts.clear_db import clear as clear_db
 
 init_logger()
 
-# RAG assistant: retrieves knowledge-base chunks (app/retrieval.py) and
-# answers with an LLM via a LangGraph retrieve -> generate flow
+# RAG assistant: retrieves knowledge-base chunks (db.vector_search_chunks)
+# and answers with an LLM via a LangGraph retrieve -> generate flow
 # (app/rag_graph.py).
 
 

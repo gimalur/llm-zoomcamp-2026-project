@@ -1,10 +1,8 @@
-from app.db import get_connection
+from db import get_connection, truncate_conversations
 
 
 def drop(conn) -> None:
-    with conn.cursor() as cur:
-        cur.execute("TRUNCATE TABLE feedback, conversations RESTART IDENTITY CASCADE")
-    conn.commit()
+    truncate_conversations(conn)
 
 
 if __name__ == "__main__":
