@@ -1,0 +1,104 @@
+{
+  "title": "LLM Monitor",
+  "uid": "llm-monitor",
+  "editable": true,
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "table",
+      "title": "Recent Conversations",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "postgresql" },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgresql" },
+          "format": "table",
+          "rawSql": "SELECT timestamp, question, answer, model, response_time, total_tokens, cost FROM conversations ORDER BY id DESC LIMIT 50",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "barchart",
+      "title": "Model Usage",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
+      "datasource": { "type": "postgres", "uid": "postgresql" },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgresql" },
+          "format": "table",
+          "rawSql": "SELECT model, COUNT(*) AS count FROM conversations GROUP BY model ORDER BY count DESC",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "piechart",
+      "title": "Feedback Relevance",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
+      "datasource": { "type": "postgres", "uid": "postgresql" },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgresql" },
+          "format": "table",
+          "rawSql": "SELECT relevance, COUNT(*) AS count FROM feedback WHERE relevance IS NOT NULL GROUP BY relevance",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Response Time",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 18 },
+      "datasource": { "type": "postgres", "uid": "postgresql" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgresql" },
+          "format": "time_series",
+          "rawSql": "SELECT timestamp AS \"time\", response_time FROM conversations WHERE $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Token Usage",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 18 },
+      "datasource": { "type": "postgres", "uid": "postgresql" },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgresql" },
+          "format": "time_series",
+          "rawSql": "SELECT timestamp AS \"time\", prompt_tokens, completion_tokens, total_tokens FROM conversations WHERE $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Cost",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 18 },
+      "datasource": { "type": "postgres", "uid": "postgresql" },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD" }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgresql" },
+          "format": "time_series",
+          "rawSql": "SELECT timestamp AS \"time\", cost FROM conversations WHERE $__timeFilter(timestamp) ORDER BY timestamp",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
