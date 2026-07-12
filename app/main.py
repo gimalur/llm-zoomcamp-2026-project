@@ -7,14 +7,16 @@ from chainlit.server import app as server
 from fastapi.responses import PlainTextResponse
 
 from db import save_conversation, save_feedback, get_connection
+from rag_graph import SYSTEM_PROMPT, answer_question
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scripts.seed_db import seed as seed_conversations  # noqa: E402
 from scripts.ingest_wikivoyage import ingest as ingest_wikivoyage  # noqa: E402
+from scripts.clear_db import clear as clear_db  # noqa: E402
 
-# Stub app: echoes the user's message and stores the turn in postgres.
-# No retrieval, no LangGraph agent wired in yet - next iteration, so
-# course/model/instructions/prompt/token/cost fields are placeholders.
+# RAG travel assistant: retrieves Wikivoyage chunks (app/retrieval.py) and
+# answers with gpt-4o-mini via a LangGraph retrieve -> generate flow
+# (app/rag_graph.py).
 
 
 def custom_route(path: str):
@@ -54,6 +56,18 @@ async def action_ingest_wikivoyage():
     return PlainTextResponse(f"Ingested {n} new Wikivoyage articles. You can close this tab.")
 
 
+@custom_route("/actions/clear-db")
+async def action_clear_db():
+    # Backs the "Clear DB" header link - full reset (conversations,
+    # feedback, articles, chunks). Use "Load Articles" to refill afterwards.
+    conn = get_connection()
+    try:
+        clear_db(conn)
+    finally:
+        conn.close()
+    return PlainTextResponse("Cleared all tables. You can close this tab.")
+
+
 def make_feedback_actions(conversation_id: int) -> list[cl.Action]:
     # Action names must be unique per message so each vote's callback can
     # close over its own conversation_id and remove only its own buttons.
@@ -91,20 +105,25 @@ async def on_message(message: cl.Message):
     start = time.monotonic()
 
     question = message.content
-    answer = f"Echo: {question}"
+    result = answer_question(question)
+    answer = result["answer"]
+
+    sources = list(dict.fromkeys(c["title"] for c in result["chunks"]))
+    if sources:
+        answer += "\n\n*Sources: " + ", ".join(sources) + "*"
 
     conversation_id = save_conversation(
         question=question,
         answer=answer,
-        course="stub-course",
-        model="echo-stub",
-        instructions="",
-        prompt=question,
-        prompt_tokens=0,
-        completion_tokens=0,
-        total_tokens=0,
+        course="wikivoyage",
+        model="gpt-4o-mini",
+        instructions=SYSTEM_PROMPT,
+        prompt=result["prompt"],
+        prompt_tokens=result["prompt_tokens"],
+        completion_tokens=result["completion_tokens"],
+        total_tokens=result["total_tokens"],
         response_time=time.monotonic() - start,
-        cost=0.0,
+        cost=result["cost"],
     )
 
     await cl.Message(

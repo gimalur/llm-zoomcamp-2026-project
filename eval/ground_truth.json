@@ -1,0 +1,502 @@
+[
+  {
+    "chunk_id": 1,
+    "article_title": "Paris",
+    "question": "What are the UNESCO World Heritage Sites mentioned in the excerpt about Paris?"
+  },
+  {
+    "chunk_id": 19,
+    "article_title": "Paris",
+    "question": "Which bus companies are mentioned as serving Paris and what are their locations?"
+  },
+  {
+    "chunk_id": 37,
+    "article_title": "Paris",
+    "question": "What measures have been taken in Paris to address the issue of dog droppings on the streets?"
+  },
+  {
+    "chunk_id": 55,
+    "article_title": "Paris",
+    "question": "What kind of culinary programs does Le Cordon Bleu Paris offer?"
+  },
+  {
+    "chunk_id": 73,
+    "article_title": "Paris",
+    "question": "What precautions should one take when renting properties for short stays in Paris according to the excerpt?"
+  },
+  {
+    "chunk_id": 91,
+    "article_title": "London",
+    "question": "What is the population of Greater London?"
+  },
+  {
+    "chunk_id": 117,
+    "article_title": "London",
+    "question": "What kind of travel options can you use to get around London?"
+  },
+  {
+    "chunk_id": 143,
+    "article_title": "London",
+    "question": "What must you do when using an Oyster card to avoid a Penalty Fare?"
+  },
+  {
+    "chunk_id": 170,
+    "article_title": "London",
+    "question": "Which museums in Central London have no general admission charges?"
+  },
+  {
+    "chunk_id": 196,
+    "article_title": "London",
+    "question": "What is the flagship beer of Fuller's brewery?"
+  },
+  {
+    "chunk_id": 223,
+    "article_title": "Tokyo",
+    "question": "What are the three major divisions of Tokyo mentioned in the excerpt?"
+  },
+  {
+    "chunk_id": 234,
+    "article_title": "Tokyo",
+    "question": "What is the fare for a second class ticket on the Ocean Tokyu Ferry from Tokyo to Kitakyushu?"
+  },
+  {
+    "chunk_id": 245,
+    "article_title": "Tokyo",
+    "question": "Which popular tourist spots are included in the guided biking tour offered by the Tokyo Great Cycling Tour?"
+  },
+  {
+    "chunk_id": 256,
+    "article_title": "Tokyo",
+    "question": "Where in Tokyo can you find a dense collection of guitar shops?"
+  },
+  {
+    "chunk_id": 267,
+    "article_title": "Tokyo",
+    "question": "What is the cost range for cocktails at the New York Bar in the Park Hyatt Tokyo?"
+  },
+  {
+    "chunk_id": 278,
+    "article_title": "New York City",
+    "question": "What is the nickname often used to refer to New York City?"
+  },
+  {
+    "chunk_id": 301,
+    "article_title": "New York City",
+    "question": "What is the cost range for a trip on the RMS Queen Mary 2 from Brooklyn to Southampton?"
+  },
+  {
+    "chunk_id": 325,
+    "article_title": "New York City",
+    "question": "What must you do before boarding Select Bus Service (SBS) buses in New York City?"
+  },
+  {
+    "chunk_id": 349,
+    "article_title": "New York City",
+    "question": "Which famous building is nearby Macy's Herald Square and is known for its beautiful reading rooms?"
+  },
+  {
+    "chunk_id": 373,
+    "article_title": "New York City",
+    "question": "Which neighborhood in Queens is noted for its diverse array of Chinese cuisines?"
+  },
+  {
+    "chunk_id": 397,
+    "article_title": "Rome",
+    "question": "What can be said about the geographical location of Rome in relation to the Apennine Mountains and the Tyrrhenian Sea?"
+  },
+  {
+    "chunk_id": 411,
+    "article_title": "Rome",
+    "question": "What should you avoid doing when trying to find a parking space in Rome to prevent getting fined?"
+  },
+  {
+    "chunk_id": 426,
+    "article_title": "Rome",
+    "question": "What are some of the prominent ancient sites you can see along the Appian Way in Rome?"
+  },
+  {
+    "chunk_id": 440,
+    "article_title": "Rome",
+    "question": "Which dialect is spoken by some residents of Rome, but is less common than Italian?"
+  },
+  {
+    "chunk_id": 455,
+    "article_title": "Rome",
+    "question": "What facilities does the Camp Site mentioned in the excerpt offer to its visitors?"
+  },
+  {
+    "chunk_id": 470,
+    "article_title": "Berlin",
+    "question": "What unique phrase did a former mayor use to describe Berlin's character?"
+  },
+  {
+    "chunk_id": 487,
+    "article_title": "Berlin",
+    "question": "What should you ensure to use to avoid getting lost in Berlin regarding street names and postal codes?"
+  },
+  {
+    "chunk_id": 505,
+    "article_title": "Berlin",
+    "question": "What is the significance of the Ringbahn in Berlin's S-Bahn system?"
+  },
+  {
+    "chunk_id": 523,
+    "article_title": "Berlin",
+    "question": "What documents do you need to bring when visiting the Reichstag's observation deck?"
+  },
+  {
+    "chunk_id": 541,
+    "article_title": "Berlin",
+    "question": "What are the typical closing hours for shops in Berlin during weekdays?"
+  },
+  {
+    "chunk_id": 559,
+    "article_title": "Barcelona",
+    "question": "What are some notable features of Barcelona that attract tourists?"
+  },
+  {
+    "chunk_id": 569,
+    "article_title": "Barcelona",
+    "question": "What is the main long-distance bus station in Barcelona and its nearby metro station?"
+  },
+  {
+    "chunk_id": 580,
+    "article_title": "Barcelona",
+    "question": "What are the two routes offered by the Barcelona City Tour and some landmarks they pass by?"
+  },
+  {
+    "chunk_id": 591,
+    "article_title": "Barcelona",
+    "question": "What is one of Spain's most famous electronic music festivals, and what type of music does it feature?"
+  },
+  {
+    "chunk_id": 602,
+    "article_title": "Barcelona",
+    "question": "What are some common methods used by pickpockets in tourist areas of Barcelona?"
+  },
+  {
+    "chunk_id": 613,
+    "article_title": "Amsterdam",
+    "question": "What is the title given to Amsterdam due to its canals and bridges?"
+  },
+  {
+    "chunk_id": 626,
+    "article_title": "Amsterdam",
+    "question": "What is the cost range for parking at a P+R spot in Amsterdam?"
+  },
+  {
+    "chunk_id": 639,
+    "article_title": "Amsterdam",
+    "question": "What are the affordable parking options available outside the city center in Amsterdam?"
+  },
+  {
+    "chunk_id": 652,
+    "article_title": "Amsterdam",
+    "question": "Which festival in Amsterdam is celebrated with a giant mass of orange-dressed people and takes place in April?"
+  },
+  {
+    "chunk_id": 665,
+    "article_title": "Amsterdam",
+    "question": "What is the starting price for a simple bed in a hostel on weekdays during winter in Amsterdam?"
+  },
+  {
+    "chunk_id": 678,
+    "article_title": "Bangkok",
+    "question": "What significant event in 1782 led to Bangkok becoming the capital of Siam?"
+  },
+  {
+    "chunk_id": 694,
+    "article_title": "Bangkok",
+    "question": "What is indicated by the red sign on 'additional buses' in Bangkok?"
+  },
+  {
+    "chunk_id": 711,
+    "article_title": "Bangkok",
+    "question": "What is a unique feature of the Saen Saep Express Boat service compared to other forms of transport in Bangkok?"
+  },
+  {
+    "chunk_id": 728,
+    "article_title": "Bangkok",
+    "question": "What type of market was completely disappeared by the 20th century but has been reinstated for tourism purposes in Bangkok?"
+  },
+  {
+    "chunk_id": 745,
+    "article_title": "Bangkok",
+    "question": "Which dinner cruise operator in Bangkok heads out with 70-seater rice barges and departs from Si Phraya pier?"
+  },
+  {
+    "chunk_id": 762,
+    "article_title": "Singapore",
+    "question": "When was modern Singapore founded as a British trading colony?"
+  },
+  {
+    "chunk_id": 784,
+    "article_title": "Singapore",
+    "question": "What is the cost of the shuttle service connecting Tanah Merah Ferry Terminal with Changi Airport?"
+  },
+  {
+    "chunk_id": 807,
+    "article_title": "Singapore",
+    "question": "Which swimming complex features a wave pool, water slides, and Jacuzzi?"
+  },
+  {
+    "chunk_id": 830,
+    "article_title": "Singapore",
+    "question": "What do coffeeshops or kopitiam in Singapore sell besides coffee?"
+  },
+  {
+    "chunk_id": 853,
+    "article_title": "Singapore",
+    "question": "What is required for transgender people in Singapore to change their legal gender?"
+  },
+  {
+    "chunk_id": 876,
+    "article_title": "Sydney",
+    "question": "What are the two most iconic structures mentioned in Sydney?"
+  },
+  {
+    "chunk_id": 892,
+    "article_title": "Sydney",
+    "question": "What is the maximum fare you can be charged for public transport if you change transport modes during a journey?"
+  },
+  {
+    "chunk_id": 909,
+    "article_title": "Sydney",
+    "question": "What is the fine for parking illegally in a disabled spot in Sydney?"
+  },
+  {
+    "chunk_id": 926,
+    "article_title": "Sydney",
+    "question": "When does the Mardi Gras parade take place in Sydney each year?"
+  },
+  {
+    "chunk_id": 943,
+    "article_title": "Sydney",
+    "question": "What is a common practice regarding the timing of breakfast service in Sydney caf\u00e9s?"
+  },
+  {
+    "chunk_id": 960,
+    "article_title": "Dubai",
+    "question": "What historical significance does Dubai have in relation to gold trade?"
+  },
+  {
+    "chunk_id": 968,
+    "article_title": "Dubai",
+    "question": "What is the price for a bus ride from Muscat to Dubai and who operates the service?"
+  },
+  {
+    "chunk_id": 977,
+    "article_title": "Dubai",
+    "question": "What system does Careem offer for cycling around Dubai and what is its cost?"
+  },
+  {
+    "chunk_id": 985,
+    "article_title": "Dubai",
+    "question": "What are some traditional Emirati food items mentioned in the excerpt?"
+  },
+  {
+    "chunk_id": 994,
+    "article_title": "Dubai",
+    "question": "What are the potential legal consequences for drug-related offences in Dubai?"
+  },
+  {
+    "chunk_id": 1003,
+    "article_title": "Istanbul",
+    "question": "What does the name 'Istanbul' translate to and from which language does it originate?"
+  },
+  {
+    "chunk_id": 1018,
+    "article_title": "Istanbul",
+    "question": "Where is the Alibeyk\u00f6y Terminal located, and how does it compare in size and orderliness to Esenler Bus Station?"
+  },
+  {
+    "chunk_id": 1033,
+    "article_title": "Istanbul",
+    "question": "What measures should passengers take when the ferry arrives at a dock in Istanbul?"
+  },
+  {
+    "chunk_id": 1049,
+    "article_title": "Istanbul",
+    "question": "What condition is the Golden Gate and Yedikule Fortress in, and what features can visitors access there?"
+  },
+  {
+    "chunk_id": 1064,
+    "article_title": "Istanbul",
+    "question": "What precautions should travelers take regarding traffic and pricing when navigating Istanbul?"
+  },
+  {
+    "chunk_id": 1080,
+    "article_title": "Prague",
+    "question": "What historical role does Prague play in relation to the region of Bohemia?"
+  },
+  {
+    "chunk_id": 1091,
+    "article_title": "Prague",
+    "question": "What is the main bus station for international buses in Prague?"
+  },
+  {
+    "chunk_id": 1103,
+    "article_title": "Prague",
+    "question": "What is the approximate maximum rate charged by Uber per kilometer in Prague?"
+  },
+  {
+    "chunk_id": 1114,
+    "article_title": "Prague",
+    "question": "Where can you find banks with acceptable currency exchange rates in Prague?"
+  },
+  {
+    "chunk_id": 1126,
+    "article_title": "Prague",
+    "question": "What should you do if you feel that a currency exchange transaction was unfair?"
+  },
+  {
+    "chunk_id": 1138,
+    "article_title": "Vienna",
+    "question": "What historical artifact, dating back 24,000 years, was found near Vienna?"
+  },
+  {
+    "chunk_id": 1152,
+    "article_title": "Vienna",
+    "question": "What is the travel time for direct Railjet trains from Z\u00fcrich to Vienna?"
+  },
+  {
+    "chunk_id": 1166,
+    "article_title": "Vienna",
+    "question": "What is the approximate travel time for buses from Bratislava to Vienna Airport?"
+  },
+  {
+    "chunk_id": 1180,
+    "article_title": "Vienna",
+    "question": "What type of music can one expect to hear at the Vienna Hofburg Orchestra concerts?"
+  },
+  {
+    "chunk_id": 1194,
+    "article_title": "Vienna",
+    "question": "What drink is commonly served at Christmas markets in Vienna?"
+  },
+  {
+    "chunk_id": 1209,
+    "article_title": "Lisbon",
+    "question": "What are some notable tourist destinations connected to Lisbon by public transportation?"
+  },
+  {
+    "chunk_id": 1218,
+    "article_title": "Lisbon",
+    "question": "Which terminal do all flights arrive at Lisbon Airport?"
+  },
+  {
+    "chunk_id": 1227,
+    "article_title": "Lisbon",
+    "question": "How much does a one-month unlimited pass for transportation in the entire greater Lisbon area cost?"
+  },
+  {
+    "chunk_id": 1236,
+    "article_title": "Lisbon",
+    "question": "What type of surfaces can visitors expect when walking around central Lisbon?"
+  },
+  {
+    "chunk_id": 1245,
+    "article_title": "Lisbon",
+    "question": "What is Fado and where in Lisbon can you find bars that offer this music?"
+  },
+  {
+    "chunk_id": 1255,
+    "article_title": "Kyoto",
+    "question": "What significant change occurred regarding the Agency for Cultural Affairs in Kyoto in 2023?"
+  },
+  {
+    "chunk_id": 1262,
+    "article_title": "Kyoto",
+    "question": "What is the recommended transport method for navigating around the city of Kyoto when using a car?"
+  },
+  {
+    "chunk_id": 1269,
+    "article_title": "Kyoto",
+    "question": "What is the discount fare for the Keihan Loop Bus from your hotel in Kyoto?"
+  },
+  {
+    "chunk_id": 1276,
+    "article_title": "Kyoto",
+    "question": "What is Funaoka Onsen known for, and what is its admission fee?"
+  },
+  {
+    "chunk_id": 1283,
+    "article_title": "Kyoto",
+    "question": "What unique experience related to tea can visitors participate in while in Kyoto?"
+  },
+  {
+    "chunk_id": 1291,
+    "article_title": "San Francisco",
+    "question": "What notable geographic features lie between San Francisco Bay and the Pacific Ocean?"
+  },
+  {
+    "chunk_id": 1309,
+    "article_title": "San Francisco",
+    "question": "What is the approximate cost range of ride sharing services from SFO to downtown San Francisco during low traffic times?"
+  },
+  {
+    "chunk_id": 1327,
+    "article_title": "San Francisco",
+    "question": "What should passengers do if they do not see a bus stop sign at an intersection while using Muni?"
+  },
+  {
+    "chunk_id": 1345,
+    "article_title": "San Francisco",
+    "question": "Where do many locals prefer to shop for groceries in San Francisco's Chinatown?"
+  },
+  {
+    "chunk_id": 1363,
+    "article_title": "San Francisco",
+    "question": "What supermarket is commonly mentioned as the dominant chain in San Francisco, and where is the closest one to Union Square?"
+  },
+  {
+    "chunk_id": 1382,
+    "article_title": "Toronto",
+    "question": "What percentage of Toronto's population is represented by ethnic communities?"
+  },
+  {
+    "chunk_id": 1395,
+    "article_title": "Toronto",
+    "question": "How long does the train travel take from Toronto to New York City?"
+  },
+  {
+    "chunk_id": 1408,
+    "article_title": "Toronto",
+    "question": "Which Toronto subway line currently has a section that is no longer in service?"
+  },
+  {
+    "chunk_id": 1421,
+    "article_title": "Toronto",
+    "question": "What team plays at BMO Field in Toronto?"
+  },
+  {
+    "chunk_id": 1434,
+    "article_title": "Toronto",
+    "question": "What is the legal minimum drinking age in Toronto?"
+  },
+  {
+    "chunk_id": 1447,
+    "article_title": "Cairo",
+    "question": "What is the historic significance of the area inscribed on the UNESCO World Heritage list in Cairo?"
+  },
+  {
+    "chunk_id": 1455,
+    "article_title": "Cairo",
+    "question": "What are the price ranges for a single trip ticket on the Cairo metro as of October 2024?"
+  },
+  {
+    "chunk_id": 1464,
+    "article_title": "Cairo",
+    "question": "Where is the Grand Egyptian Museum located in relation to the Pyramids of Giza?"
+  },
+  {
+    "chunk_id": 1473,
+    "article_title": "Cairo",
+    "question": "What are some of the best options for finding employment in Cairo?"
+  },
+  {
+    "chunk_id": 1482,
+    "article_title": "Cairo",
+    "question": "What types of beverages can you typically find at fruit juice stalls during the hot summer in Cairo?"
+  }
+]

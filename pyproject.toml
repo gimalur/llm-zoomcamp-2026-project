@@ -13,6 +13,7 @@ dependencies = [
     "faker>=26.0",
     "requests>=2.32",
     "fastembed>=0.4",
+    "openai>=1.50",
 ]
 
 [tool.uv]

@@ -12,6 +12,7 @@ services:
     volumes:
       - ./app:/srv/app/app
       - ./scripts:/srv/app/scripts
+      - ./eval:/srv/app/eval
 
   postgres-zoom:
     image: pgvector/pgvector:pg16

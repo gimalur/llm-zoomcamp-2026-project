@@ -14,6 +14,8 @@ SOURCE = "wikivoyage"
 HEADERS = {"User-Agent": "course-assistant/0.1 (LLM Zoomcamp 2026 course project)"}
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 REQUEST_DELAY_SECONDS = 1.0
+CHUNK_SIZE_WORDS = 300
+CHUNK_OVERLAP_WORDS = 50
 
 # Curated set of destination articles to seed the knowledge base with.
 TITLES = [
@@ -61,17 +63,32 @@ def fetch_extract(title: str) -> tuple[str, str] | None:
     return page["title"], page["extract"]
 
 
-def already_ingested(conn) -> set[str]:
+def chunk_text(text: str, size: int = CHUNK_SIZE_WORDS, overlap: int = CHUNK_OVERLAP_WORDS) -> list[str]:
+    """Split text into overlapping word-count chunks."""
+    words = text.split()
+    if not words:
+        return []
+
+    step = size - overlap
+    chunks = []
+    for start in range(0, len(words), step):
+        chunk = " ".join(words[start : start + size])
+        if chunk:
+            chunks.append(chunk)
+        if start + size >= len(words):
+            break
+    return chunks
+
+
+def already_fetched(conn) -> set[str]:
     with conn.cursor() as cur:
         cur.execute("SELECT title FROM articles WHERE source = %s", (SOURCE,))
         return {row[0] for row in cur.fetchall()}
 
 
-def ingest(conn) -> int:
-    # No chunking yet: the model truncates each article to its first ~256
-    # tokens, so the embedding only reflects the article's opening section.
-    model = TextEmbedding(model_name=EMBEDDING_MODEL)
-    done = already_ingested(conn)
+def fetch_articles(conn) -> int:
+    """Fetch missing titles from the Wikivoyage API and store full articles."""
+    done = already_fetched(conn)
     count = 0
     with conn.cursor() as cur:
         for title in TITLES:
@@ -84,30 +101,69 @@ def ingest(conn) -> int:
                 continue
             resolved_title, content = result
 
-            embedding = next(iter(model.embed([content])))
             url = f"https://en.wikivoyage.org/wiki/{quote(resolved_title.replace(' ', '_'))}"
             cur.execute(
                 """
-                INSERT INTO articles (source, title, url, content, embedding)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO articles (source, title, url, content)
+                VALUES (%s, %s, %s, %s)
                 ON CONFLICT (source, title)
-                DO UPDATE SET
-                    content = EXCLUDED.content,
-                    url = EXCLUDED.url,
-                    embedding = EXCLUDED.embedding,
-                    fetched_at = now()
+                DO UPDATE SET content = EXCLUDED.content, url = EXCLUDED.url, fetched_at = now()
                 """,
-                (SOURCE, resolved_title, url, content, str(embedding.tolist())),
+                (SOURCE, resolved_title, url, content),
             )
             conn.commit()
             count += 1
     return count
 
 
+def chunk_and_embed_articles(conn) -> int:
+    """Chunk + embed any article that doesn't have chunks yet.
+
+    Runs against content already in the DB - no Wikivoyage API calls, so it
+    safely backfills articles that were ingested before chunking existed.
+    """
+    model = TextEmbedding(model_name=EMBEDDING_MODEL)
+    count = 0
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT a.id, a.content FROM articles a
+            WHERE a.source = %s
+              AND NOT EXISTS (SELECT 1 FROM chunks c WHERE c.article_id = a.id)
+            """,
+            (SOURCE,),
+        )
+        articles = cur.fetchall()
+
+        for article_id, content in articles:
+            chunks = chunk_text(content)
+            if not chunks:
+                continue
+
+            embeddings = model.embed(chunks)
+            for chunk_index, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
+                cur.execute(
+                    """
+                    INSERT INTO chunks (article_id, chunk_index, content, embedding)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (article_id, chunk_index) DO NOTHING
+                    """,
+                    (article_id, chunk_index, chunk, str(embedding.tolist())),
+                )
+            conn.commit()
+            count += 1
+    return count
+
+
+def ingest(conn) -> int:
+    fetch_articles(conn)
+    return chunk_and_embed_articles(conn)
+
+
 if __name__ == "__main__":
     connection = get_connection()
     try:
         n = ingest(connection)
-        print(f"Ingested {n} articles from Wikivoyage.")
+        print(f"Chunked and embedded {n} articles from Wikivoyage.")
     finally:
         connection.close()

@@ -1,4 +1,4 @@
-.PHONY: sync db-seed db-drop db-ingest shell-chat shell-db
+.PHONY: sync db-seed db-drop db-clear db-ingest eval-questions eval-retrieval eval-llm shell-chat shell-db
 
 sync:
 	uv sync
@@ -9,8 +9,20 @@ db-seed:
 db-drop:
 	docker compose exec chat-zoom python /srv/app/scripts/drop_db.py
 
+db-clear:
+	docker compose exec chat-zoom python /srv/app/scripts/clear_db.py
+
 db-ingest:
 	docker compose exec chat-zoom python /srv/app/scripts/ingest_wikivoyage.py
+
+eval-questions:
+	docker compose exec chat-zoom python /srv/app/scripts/generate_eval_questions.py
+
+eval-retrieval:
+	docker compose exec chat-zoom python /srv/app/scripts/evaluate_retrieval.py
+
+eval-llm:
+	docker compose exec chat-zoom python /srv/app/scripts/evaluate_llm.py
 
 shell-chat:
 	docker compose exec chat-zoom bash

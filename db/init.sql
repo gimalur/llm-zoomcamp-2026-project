@@ -44,3 +44,17 @@ CREATE TABLE IF NOT EXISTS articles (
     fetched_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     UNIQUE (source, title)
 );
+
+-- Chunk-level granularity for retrieval: articles are too long to embed
+-- whole (the model truncates at ~256 tokens), so retrieval runs against
+-- these smaller overlapping chunks instead of articles.embedding.
+CREATE TABLE IF NOT EXISTS chunks (
+    id SERIAL PRIMARY KEY,
+    article_id INTEGER NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+    chunk_index INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    embedding VECTOR(384),
+    UNIQUE (article_id, chunk_index)
+);
+
+CREATE INDEX IF NOT EXISTS idx_chunks_article_id ON chunks (article_id);

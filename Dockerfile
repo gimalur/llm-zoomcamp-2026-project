@@ -9,6 +9,7 @@ RUN uv sync --no-install-project
 
 COPY app/ ./app
 COPY scripts/ ./scripts
+COPY eval/ ./eval
 
 ENV PATH="/srv/app/.venv/bin:${PATH}"
 
