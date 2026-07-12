@@ -34,7 +34,7 @@ def seed(conn) -> None:
             cur.execute(
                 """
                 INSERT INTO conversations (
-                    question, answer, course, model, instructions, prompt,
+                    question, answer, source, model, instructions, prompt,
                     prompt_tokens, completion_tokens, total_tokens,
                     response_time, cost, timestamp
                 )

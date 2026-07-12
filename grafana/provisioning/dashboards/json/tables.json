@@ -18,7 +18,7 @@
         {
           "datasource": { "type": "postgres", "uid": "postgresql" },
           "format": "table",
-          "rawSql": "SELECT id, question, answer, course, model, prompt_tokens, completion_tokens, total_tokens, response_time, cost, timestamp FROM conversations ORDER BY id DESC LIMIT 200",
+          "rawSql": "SELECT id, question, answer, source, model, prompt_tokens, completion_tokens, total_tokens, response_time, cost, timestamp FROM conversations ORDER BY id DESC LIMIT 200",
           "refId": "A"
         }
       ]
@@ -41,14 +41,29 @@
     {
       "id": 3,
       "type": "table",
-      "title": "articles",
+      "title": "rag_data",
       "gridPos": { "h": 9, "w": 24, "x": 0, "y": 18 },
       "datasource": { "type": "postgres", "uid": "postgresql" },
       "targets": [
         {
           "datasource": { "type": "postgres", "uid": "postgresql" },
           "format": "table",
-          "rawSql": "SELECT id, source, title, url, length(content) AS content_length, fetched_at FROM articles ORDER BY id DESC LIMIT 200",
+          "rawSql": "SELECT id, source, title, url, length(content) AS content_length, fetched_at FROM rag_data ORDER BY id DESC LIMIT 200",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "table",
+      "title": "rag_data_chunks",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 27 },
+      "datasource": { "type": "postgres", "uid": "postgresql" },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgresql" },
+          "format": "table",
+          "rawSql": "SELECT id, rag_data_id, chunk_index, length(content) AS content_length FROM rag_data_chunks ORDER BY id DESC LIMIT 200",
           "refId": "A"
         }
       ]

@@ -27,7 +27,7 @@ def get_connection():
 def vector_search(cur, query_embedding: list[float], top_k: int) -> list[int]:
     cur.execute(
         """
-        SELECT id FROM chunks
+        SELECT id FROM rag_data_chunks
         ORDER BY embedding <=> %s::vector
         LIMIT %s
         """,
@@ -39,7 +39,7 @@ def vector_search(cur, query_embedding: list[float], top_k: int) -> list[int]:
 def text_search(cur, question: str, top_k: int) -> list[int]:
     cur.execute(
         """
-        SELECT id FROM chunks
+        SELECT id FROM rag_data_chunks
         WHERE to_tsvector('english', content) @@ plainto_tsquery('english', %s)
         ORDER BY ts_rank(to_tsvector('english', content), plainto_tsquery('english', %s)) DESC
         LIMIT %s

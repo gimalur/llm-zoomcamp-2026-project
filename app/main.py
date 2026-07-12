@@ -117,7 +117,7 @@ async def on_message(message: cl.Message):
     conversation_id = save_conversation(
         question=question,
         answer=answer,
-        course="wikivoyage",
+        source="wikivoyage",
         model="gpt-4o-mini",
         instructions=SYSTEM_PROMPT,
         prompt=result["prompt"],

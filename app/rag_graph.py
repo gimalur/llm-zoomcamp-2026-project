@@ -17,10 +17,11 @@ PRICE_PER_PROMPT_TOKEN = 0.15 / 1_000_000
 PRICE_PER_COMPLETION_TOKEN = 0.60 / 1_000_000
 
 SYSTEM_PROMPT = (
-    "You are a travel assistant. Answer the user's question using ONLY the "
-    "provided context from Wikivoyage articles. If the context doesn't "
-    "contain the answer, say you don't know - don't make things up. Keep "
-    "answers concise and mention which destination(s) the info comes from."
+    "You are a knowledge assistant. Answer the user's question using ONLY "
+    "the provided context retrieved from the database. If the context "
+    "doesn't contain the answer, say you don't know - don't make things "
+    "up. Keep answers concise and mention which source(s) the info comes "
+    "from."
 )
 
 _client: OpenAI | None = None

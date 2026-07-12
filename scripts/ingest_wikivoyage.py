@@ -82,7 +82,7 @@ def chunk_text(text: str, size: int = CHUNK_SIZE_WORDS, overlap: int = CHUNK_OVE
 
 def already_fetched(conn) -> set[str]:
     with conn.cursor() as cur:
-        cur.execute("SELECT title FROM articles WHERE source = %s", (SOURCE,))
+        cur.execute("SELECT title FROM rag_data WHERE source = %s", (SOURCE,))
         return {row[0] for row in cur.fetchall()}
 
 
@@ -104,7 +104,7 @@ def fetch_articles(conn) -> int:
             url = f"https://en.wikivoyage.org/wiki/{quote(resolved_title.replace(' ', '_'))}"
             cur.execute(
                 """
-                INSERT INTO articles (source, title, url, content)
+                INSERT INTO rag_data (source, title, url, content)
                 VALUES (%s, %s, %s, %s)
                 ON CONFLICT (source, title)
                 DO UPDATE SET content = EXCLUDED.content, url = EXCLUDED.url, fetched_at = now()
@@ -117,25 +117,25 @@ def fetch_articles(conn) -> int:
 
 
 def chunk_and_embed_articles(conn) -> int:
-    """Chunk + embed any article that doesn't have chunks yet.
+    """Chunk + embed any rag_data row that doesn't have chunks yet.
 
     Runs against content already in the DB - no Wikivoyage API calls, so it
-    safely backfills articles that were ingested before chunking existed.
+    safely backfills rows that were ingested before chunking existed.
     """
     model = TextEmbedding(model_name=EMBEDDING_MODEL)
     count = 0
     with conn.cursor() as cur:
         cur.execute(
             """
-            SELECT a.id, a.content FROM articles a
+            SELECT a.id, a.content FROM rag_data a
             WHERE a.source = %s
-              AND NOT EXISTS (SELECT 1 FROM chunks c WHERE c.article_id = a.id)
+              AND NOT EXISTS (SELECT 1 FROM rag_data_chunks c WHERE c.rag_data_id = a.id)
             """,
             (SOURCE,),
         )
         articles = cur.fetchall()
 
-        for article_id, content in articles:
+        for rag_data_id, content in articles:
             chunks = chunk_text(content)
             if not chunks:
                 continue
@@ -144,11 +144,11 @@ def chunk_and_embed_articles(conn) -> int:
             for chunk_index, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
                 cur.execute(
                     """
-                    INSERT INTO chunks (article_id, chunk_index, content, embedding)
+                    INSERT INTO rag_data_chunks (rag_data_id, chunk_index, content, embedding)
                     VALUES (%s, %s, %s, %s)
-                    ON CONFLICT (article_id, chunk_index) DO NOTHING
+                    ON CONFLICT (rag_data_id, chunk_index) DO NOTHING
                     """,
-                    (article_id, chunk_index, chunk, str(embedding.tolist())),
+                    (rag_data_id, chunk_index, chunk, str(embedding.tolist())),
                 )
             conn.commit()
             count += 1

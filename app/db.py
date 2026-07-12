@@ -20,7 +20,7 @@ def get_connection():
 def save_conversation(
     question: str,
     answer: str,
-    course: str,
+    source: str,
     model: str,
     instructions: str,
     prompt: str,
@@ -36,7 +36,7 @@ def save_conversation(
             cur.execute(
                 """
                 INSERT INTO conversations (
-                    question, answer, course, model, instructions, prompt,
+                    question, answer, source, model, instructions, prompt,
                     prompt_tokens, completion_tokens, total_tokens,
                     response_time, cost, timestamp
                 )
@@ -46,7 +46,7 @@ def save_conversation(
                 (
                     question,
                     answer,
-                    course,
+                    source,
                     model,
                     instructions,
                     prompt,

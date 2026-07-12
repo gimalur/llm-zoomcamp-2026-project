@@ -12,9 +12,9 @@ MODEL = "gpt-4o-mini"
 SAMPLES_PER_ARTICLE = 5
 OUTPUT_PATH = Path(__file__).resolve().parent.parent / "eval" / "ground_truth.json"
 
-PROMPT_TEMPLATE = """You are generating evaluation data for a travel Q&A retrieval system.
+PROMPT_TEMPLATE = """You are generating evaluation data for a Q&A retrieval system.
 
-Below are {n} numbered excerpts from a Wikivoyage article about "{article_title}".
+Below are {n} numbered excerpts from a source document titled "{article_title}".
 For EACH excerpt, write exactly one specific question that can ONLY be answered
 using that excerpt (not general knowledge, not other excerpts). Avoid vague
 questions like "What does this say about {article_title}?".
@@ -67,13 +67,13 @@ def generate_questions_for_article(client: OpenAI, article_title: str, chunks: l
 
 def generate(conn, client: OpenAI) -> list[dict]:
     with conn.cursor() as cur:
-        cur.execute("SELECT id, title FROM articles ORDER BY id")
+        cur.execute("SELECT id, title FROM rag_data ORDER BY id")
         articles = cur.fetchall()
 
         all_items = []
         for article_id, title in articles:
             cur.execute(
-                "SELECT id, content FROM chunks WHERE article_id = %s ORDER BY chunk_index",
+                "SELECT id, content FROM rag_data_chunks WHERE rag_data_id = %s ORDER BY chunk_index",
                 (article_id,),
             )
             chunk_rows = cur.fetchall()

@@ -24,10 +24,10 @@ def search(query_embedding: list[float], top_k: int = 5) -> list[dict]:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT c.id, c.article_id, a.title, a.url, c.content,
+                SELECT c.id, c.rag_data_id, a.title, a.url, c.content,
                        c.embedding <=> %s::vector AS distance
-                FROM chunks c
-                JOIN articles a ON a.id = c.article_id
+                FROM rag_data_chunks c
+                JOIN rag_data a ON a.id = c.rag_data_id
                 ORDER BY distance
                 LIMIT %s
                 """,
@@ -38,7 +38,7 @@ def search(query_embedding: list[float], top_k: int = 5) -> list[dict]:
     return [
         {
             "chunk_id": row[0],
-            "article_id": row[1],
+            "rag_data_id": row[1],
             "title": row[2],
             "url": row[3],
             "content": row[4],

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS conversations (
     id SERIAL PRIMARY KEY,
     question TEXT NOT NULL,
     answer TEXT NOT NULL,
-    course TEXT NOT NULL,
+    source TEXT NOT NULL,
     model TEXT NOT NULL,
     instructions TEXT NOT NULL,
     prompt TEXT NOT NULL,
@@ -32,9 +32,10 @@ CREATE TABLE IF NOT EXISTS feedback (
 CREATE INDEX IF NOT EXISTS idx_conversations_timestamp ON conversations (timestamp);
 CREATE INDEX IF NOT EXISTS idx_feedback_conversation_id ON feedback (conversation_id);
 
--- Knowledge base articles, scraped from an external source (e.g. Wikivoyage).
+-- Knowledge base for RAG retrieval - source-agnostic, any ingestion pipeline
+-- can populate this (Wikivoyage today, anything else later).
 -- embedding is 384-dim to match the all-MiniLM-L6-v2 model (via fastembed).
-CREATE TABLE IF NOT EXISTS articles (
+CREATE TABLE IF NOT EXISTS rag_data (
     id SERIAL PRIMARY KEY,
     source TEXT NOT NULL,
     title TEXT NOT NULL,
@@ -45,16 +46,16 @@ CREATE TABLE IF NOT EXISTS articles (
     UNIQUE (source, title)
 );
 
--- Chunk-level granularity for retrieval: articles are too long to embed
--- whole (the model truncates at ~256 tokens), so retrieval runs against
--- these smaller overlapping chunks instead of articles.embedding.
-CREATE TABLE IF NOT EXISTS chunks (
+-- Chunk-level granularity for retrieval: source documents are too long to
+-- embed whole (the model truncates at ~256 tokens), so retrieval runs
+-- against these smaller overlapping chunks instead of rag_data.embedding.
+CREATE TABLE IF NOT EXISTS rag_data_chunks (
     id SERIAL PRIMARY KEY,
-    article_id INTEGER NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+    rag_data_id INTEGER NOT NULL REFERENCES rag_data(id) ON DELETE CASCADE,
     chunk_index INTEGER NOT NULL,
     content TEXT NOT NULL,
     embedding VECTOR(384),
-    UNIQUE (article_id, chunk_index)
+    UNIQUE (rag_data_id, chunk_index)
 );
 
-CREATE INDEX IF NOT EXISTS idx_chunks_article_id ON chunks (article_id);
+CREATE INDEX IF NOT EXISTS idx_rag_data_chunks_rag_data_id ON rag_data_chunks (rag_data_id);
