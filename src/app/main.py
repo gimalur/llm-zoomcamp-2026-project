@@ -5,18 +5,26 @@ from chainlit.server import app as server
 from fastapi.responses import PlainTextResponse
 from loguru import logger
 
+from config import Config
 from db import save_conversation, save_feedback, get_connection
 from logger import init_logger
 from rag_graph import SYSTEM_PROMPT, answer_question
 from scripts.seed_db import seed as seed_conversations
-from scripts.ingest_wikivoyage import ingest as ingest_wikivoyage
+from scripts.ingest_wikivoyage import ingest as ingest_data
 from scripts.clear_db import clear as clear_db
 
 init_logger()
 
-# RAG travel assistant: retrieves Wikivoyage chunks (app/retrieval.py) and
-# answers with gpt-4o-mini via a LangGraph retrieve -> generate flow
+# RAG assistant: retrieves knowledge-base chunks (app/retrieval.py) and
+# answers with an LLM via a LangGraph retrieve -> generate flow
 # (app/rag_graph.py).
+
+
+class Route:
+    # Must match the header_links `url` values in app/.chainlit/config.toml.
+    SEED_DB = "/actions/seed-db"
+    INGEST_DATA = "/actions/ingest-data"
+    CLEAR_DB = "/actions/clear-db"
 
 
 def custom_route(path: str):
@@ -31,7 +39,7 @@ def custom_route(path: str):
     return decorator
 
 
-@custom_route("/actions/seed-db")
+@custom_route(Route.SEED_DB)
 async def action_seed_db():
     # Backs the "Init DB" header link in app/.chainlit/config.toml -
     # a screen-level control outside the chat message flow.
@@ -43,20 +51,20 @@ async def action_seed_db():
     return PlainTextResponse("Seeded fake conversations and feedback. You can close this tab.")
 
 
-@custom_route("/actions/ingest-wikivoyage")
-async def action_ingest_wikivoyage():
-    # Backs the "Load Articles" header link - fetches and embeds the
-    # curated Wikivoyage article set. Can take a while (rate-limited,
-    # ~1 req/sec) and is safe to rerun: already-ingested titles are skipped.
+@custom_route(Route.INGEST_DATA)
+async def action_ingest_data():
+    # Backs the "Ingest Data" header link - fetches and embeds the
+    # curated knowledge-base documents. Can take a while (rate-limited)
+    # and is safe to rerun: already-ingested documents are skipped.
     conn = get_connection()
     try:
-        n = ingest_wikivoyage(conn)
+        n = ingest_data(conn)
     finally:
         conn.close()
-    return PlainTextResponse(f"Ingested {n} new Wikivoyage articles. You can close this tab.")
+    return PlainTextResponse(f"Ingested {n} new documents. You can close this tab.")
 
 
-@custom_route("/actions/clear-db")
+@custom_route(Route.CLEAR_DB)
 async def action_clear_db():
     # Backs the "Clear DB" header link - full reset (conversations,
     # feedback, articles, chunks). Use "Load Articles" to refill afterwards.
@@ -117,7 +125,7 @@ async def on_message(message: cl.Message):
         question=question,
         answer=answer,
         source="wikivoyage",
-        model="gpt-4o-mini",
+        model=Config.Chat.MODEL,
         instructions=SYSTEM_PROMPT,
         prompt=result["prompt"],
         prompt_tokens=result["prompt_tokens"],
