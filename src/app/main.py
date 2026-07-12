@@ -9,7 +9,7 @@ from config import Config
 from db import save_conversation, save_feedback, get_connection
 from logger import init_logger
 from rag_graph import SYSTEM_PROMPT, answer_question
-from scripts.seed_db import seed as seed_conversations
+from scripts.ingest_fake_db import seed as ingest_fake_data
 from scripts.ingest_wikivoyage import ingest as ingest_data
 from scripts.clear_db import clear as clear_db
 
@@ -22,7 +22,7 @@ init_logger()
 
 class Route:
     # Must match the header_links `url` values in app/.chainlit/config.toml.
-    SEED_DB = "/actions/seed-db"
+    INGEST_FAKE_DB = "/actions/ingest-fake-db"
     INGEST_DATA = "/actions/ingest-data"
     CLEAR_DB = "/actions/clear-db"
 
@@ -39,13 +39,13 @@ def custom_route(path: str):
     return decorator
 
 
-@custom_route(Route.SEED_DB)
-async def action_seed_db():
-    # Backs the "Init DB" header link in app/.chainlit/config.toml -
+@custom_route(Route.INGEST_FAKE_DB)
+async def action_ingest_fake_db():
+    # Backs the "Ingest fake data" header link in app/.chainlit/config.toml -
     # a screen-level control outside the chat message flow.
     conn = get_connection()
     try:
-        seed_conversations(conn)
+        ingest_fake_data(conn)
     finally:
         conn.close()
     return PlainTextResponse("Seeded fake conversations and feedback. You can close this tab.")

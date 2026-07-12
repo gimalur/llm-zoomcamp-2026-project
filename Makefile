@@ -1,10 +1,10 @@
-.PHONY: sync db-seed db-drop db-clear db-ingest eval-questions eval-retrieval eval-llm shell-chat shell-db
+.PHONY: sync db-ingest-fake db-drop db-clear db-ingest eval-questions eval-retrieval eval-llm shell-chat shell-db
 
 sync:
 	uv sync
 
-db-seed:
-	docker compose exec chat-zoom python -m scripts.seed_db
+db-ingest-fake:
+	docker compose exec chat-zoom python -m scripts.ingest_fake_db
 
 db-drop:
 	docker compose exec chat-zoom python -m scripts.drop_db
