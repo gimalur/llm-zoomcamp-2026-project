@@ -125,6 +125,7 @@ async def on_message(message: cl.Message):
         answer += "\n\n*Sources: " + ", ".join(sources) + "*"
 
     conversation_id = save_conversation(
+        thread_id=thread_id,
         question=question,
         answer=answer,
         source="wikivoyage",

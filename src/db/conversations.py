@@ -5,6 +5,7 @@ from .connection import get_connection
 
 def insert_conversation(
     conn,
+    thread_id: str,
     question: str,
     answer: str,
     source: str,
@@ -22,14 +23,15 @@ def insert_conversation(
         cur.execute(
             """
             INSERT INTO conversations (
-                question, answer, source, model, instructions, prompt,
+                thread_id, question, answer, source, model, instructions, prompt,
                 prompt_tokens, completion_tokens, total_tokens,
                 response_time, cost, timestamp
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
             """,
             (
+                thread_id,
                 question,
                 answer,
                 source,
@@ -48,6 +50,7 @@ def insert_conversation(
 
 
 def save_conversation(
+    thread_id: str,
     question: str,
     answer: str,
     source: str,
@@ -65,6 +68,7 @@ def save_conversation(
     with get_connection() as conn:
         return insert_conversation(
             conn,
+            thread_id,
             question,
             answer,
             source,

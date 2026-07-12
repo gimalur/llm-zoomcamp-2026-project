@@ -5,6 +5,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 CREATE TABLE IF NOT EXISTS conversations (
     id SERIAL PRIMARY KEY,
+    thread_id TEXT NOT NULL,
     question TEXT NOT NULL,
     answer TEXT NOT NULL,
     source TEXT NOT NULL,
@@ -30,6 +31,7 @@ CREATE TABLE IF NOT EXISTS feedback (
 );
 
 CREATE INDEX IF NOT EXISTS idx_conversations_timestamp ON conversations (timestamp);
+CREATE INDEX IF NOT EXISTS idx_conversations_thread_id ON conversations (thread_id);
 CREATE INDEX IF NOT EXISTS idx_feedback_conversation_id ON feedback (conversation_id);
 
 -- Knowledge base for RAG retrieval - source-agnostic, any ingestion pipeline

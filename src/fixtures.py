@@ -21,6 +21,7 @@ def seed(conn) -> None:
 
         conversation_id = insert_conversation(
             conn,
+            thread_id=fake.uuid4(),
             question=fake.sentence(),
             answer=fake.paragraph(),
             source=random.choice(COURSES),

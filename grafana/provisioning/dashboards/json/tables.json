@@ -18,7 +18,7 @@
         {
           "datasource": { "type": "postgres", "uid": "postgresql" },
           "format": "table",
-          "rawSql": "SELECT id, question, answer, source, model, prompt_tokens, completion_tokens, total_tokens, response_time, cost, timestamp FROM conversations ORDER BY id DESC LIMIT 200",
+          "rawSql": "SELECT id, thread_id, question, answer, source, model, prompt_tokens, completion_tokens, total_tokens, response_time, cost, timestamp FROM conversations ORDER BY id DESC LIMIT 200",
           "refId": "A"
         }
       ]
