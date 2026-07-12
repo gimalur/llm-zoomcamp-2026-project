@@ -5,6 +5,7 @@ from pathlib import Path
 import chainlit as cl
 from chainlit.server import app as server
 from fastapi.responses import PlainTextResponse
+from loguru import logger
 
 from db import save_conversation, save_feedback, get_connection
 from rag_graph import SYSTEM_PROMPT, answer_question
@@ -105,6 +106,7 @@ async def on_message(message: cl.Message):
     start = time.monotonic()
 
     question = message.content
+    logger.info("query={!r}", question)
     result = answer_question(question)
     answer = result["answer"]
 

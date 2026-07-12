@@ -2,6 +2,7 @@ import os
 from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
+from loguru import logger
 from openai import OpenAI
 
 from retrieval import embed_query, search
@@ -44,8 +45,14 @@ class RagState(TypedDict):
 
 
 def retrieve(state: RagState) -> dict:
+    logger.info("tool_call=retrieve query={!r} top_k={}", state["question"], TOP_K)
     query_embedding = embed_query(state["question"])
     chunks = search(query_embedding, top_k=TOP_K)
+    logger.info(
+        "tool_call=retrieve result count={} titles={}",
+        len(chunks),
+        [c["title"] for c in chunks],
+    )
     return {"chunks": chunks}
 
 
@@ -59,6 +66,7 @@ def build_prompt(question: str, chunks: list[dict]) -> str:
 def generate(state: RagState) -> dict:
     prompt = build_prompt(state["question"], state["chunks"])
 
+    logger.info("tool_call=generate model={} chunks={}", MODEL, len(state["chunks"]))
     response = get_client().chat.completions.create(
         model=MODEL,
         messages=[
@@ -71,6 +79,12 @@ def generate(state: RagState) -> dict:
     cost = (
         usage.prompt_tokens * PRICE_PER_PROMPT_TOKEN
         + usage.completion_tokens * PRICE_PER_COMPLETION_TOKEN
+    )
+    logger.info(
+        "tool_call=generate result prompt_tokens={} completion_tokens={} cost={:.6f}",
+        usage.prompt_tokens,
+        usage.completion_tokens,
+        cost,
     )
 
     return {
