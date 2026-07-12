@@ -1,7 +1,7 @@
 from fastembed import TextEmbedding
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from config import CHUNK_OVERLAP_CHARS, CHUNK_SIZE_CHARS, EMBEDDING_MODEL
+from config import Config
 
 
 class RagIngestor:
@@ -16,13 +16,13 @@ class RagIngestor:
         self.conn = conn
         self._model = None
         self._splitter = RecursiveCharacterTextSplitter(
-            chunk_size=CHUNK_SIZE_CHARS,
-            chunk_overlap=CHUNK_OVERLAP_CHARS,
+            chunk_size=Config.Embedding.CHUNK_SIZE_CHARS,
+            chunk_overlap=Config.Embedding.CHUNK_OVERLAP_CHARS,
         )
 
     def _embedding_model(self) -> TextEmbedding:
         if self._model is None:
-            self._model = TextEmbedding(model_name=EMBEDDING_MODEL)
+            self._model = TextEmbedding(model_name=Config.Embedding.MODEL)
         return self._model
 
     def existing_titles(self, source: str) -> set[str]:

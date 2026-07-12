@@ -1,21 +1,26 @@
-"""Shared tuning knobs for the RAG pipeline, ingestion, and evaluation."""
+class Config:
+    class Chat:
+        MODEL = "gpt-4o-mini"
 
-CHAT_MODEL = "gpt-4o-mini"
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+        # Approximate OpenAI gpt-4o-mini pricing, per token (verify at
+        # https://developers.openai.com/api/docs/pricing before relying on
+        # this for real billing - it's illustrative for the monitoring
+        # dashboard, not an invoice).
+        PRICE_PER_PROMPT_TOKEN = 0.15 / 1_000_000
+        PRICE_PER_COMPLETION_TOKEN = 0.60 / 1_000_000
 
-TOP_K = 5
+    class Embedding:
+        MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
-# all-MiniLM-L6-v2 truncates at 256 tokens (~4 chars/token for English), so
-# chunks stay under that budget instead of silently losing their tail.
-CHUNK_SIZE_CHARS = 900
-CHUNK_OVERLAP_CHARS = 150
+        # all-MiniLM-L6-v2 truncates at 256 tokens (~4 chars/token for
+        # English), so chunks stay under that budget instead of silently
+        # losing their tail.
+        CHUNK_SIZE_CHARS = 900
+        CHUNK_OVERLAP_CHARS = 150
 
-# Approximate OpenAI gpt-4o-mini pricing, per token (verify at
-# https://developers.openai.com/api/docs/pricing before relying on this
-# for real billing - it's illustrative for the monitoring dashboard, not
-# an invoice).
-PRICE_PER_PROMPT_TOKEN = 0.15 / 1_000_000
-PRICE_PER_COMPLETION_TOKEN = 0.60 / 1_000_000
+    class Retrieval:
+        TOP_K = 5
+        RRF_K = 60  # standard reciprocal-rank-fusion constant, hybrid eval
 
-RRF_K = 60  # standard reciprocal-rank-fusion constant, hybrid retrieval eval
-EVAL_SAMPLES_PER_DOCUMENT = 5  # ground-truth questions sampled per document
+    class Eval:
+        SAMPLES_PER_DOCUMENT = 5  # ground-truth questions sampled per document

@@ -5,7 +5,7 @@ from pathlib import Path
 from openai import OpenAI
 
 from app.db import get_connection
-from config import CHAT_MODEL, EVAL_SAMPLES_PER_DOCUMENT
+from config import Config
 
 OUTPUT_PATH = Path(__file__).resolve().parent.parent.parent / "eval" / "ground_truth.json"
 
@@ -36,7 +36,7 @@ def generate_questions_for_article(client: OpenAI, article_title: str, chunks: l
     prompt = PROMPT_TEMPLATE.format(n=len(chunks), article_title=article_title, excerpts=excerpts)
 
     response = client.chat.completions.create(
-        model=CHAT_MODEL,
+        model=Config.Chat.MODEL,
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"},
     )
@@ -68,7 +68,7 @@ def generate(conn, client: OpenAI) -> list[dict]:
             if not chunk_rows:
                 continue
 
-            indices = sample_chunk_indices(len(chunk_rows), EVAL_SAMPLES_PER_DOCUMENT)
+            indices = sample_chunk_indices(len(chunk_rows), Config.Eval.SAMPLES_PER_DOCUMENT)
             sampled = [chunk_rows[i] for i in indices]
 
             items = generate_questions_for_article(client, title, sampled)

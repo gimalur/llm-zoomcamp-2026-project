@@ -1,6 +1,6 @@
 from fastembed import TextEmbedding
 
-from config import EMBEDDING_MODEL
+from config import Config
 from db import get_connection
 
 _model: TextEmbedding | None = None
@@ -9,7 +9,7 @@ _model: TextEmbedding | None = None
 def get_model() -> TextEmbedding:
     global _model
     if _model is None:
-        _model = TextEmbedding(model_name=EMBEDDING_MODEL)
+        _model = TextEmbedding(model_name=Config.Embedding.MODEL)
     return _model
 
 

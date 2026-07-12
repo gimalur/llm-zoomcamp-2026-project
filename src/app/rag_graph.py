@@ -5,7 +5,7 @@ from langgraph.graph import END, START, StateGraph
 from loguru import logger
 from openai import OpenAI
 
-from config import CHAT_MODEL, PRICE_PER_COMPLETION_TOKEN, PRICE_PER_PROMPT_TOKEN, TOP_K
+from config import Config
 from retrieval import embed_query, search
 
 SYSTEM_PROMPT = (
@@ -38,9 +38,9 @@ class RagState(TypedDict):
 
 
 def retrieve(state: RagState) -> dict:
-    logger.info("tool_call=retrieve query={!r} top_k={}", state["question"], TOP_K)
+    logger.info("tool_call=retrieve query={!r} top_k={}", state["question"], Config.Retrieval.TOP_K)
     query_embedding = embed_query(state["question"])
-    chunks = search(query_embedding, top_k=TOP_K)
+    chunks = search(query_embedding, top_k=Config.Retrieval.TOP_K)
     logger.info(
         "tool_call=retrieve result count={} titles={}",
         len(chunks),
@@ -59,9 +59,9 @@ def build_prompt(question: str, chunks: list[dict]) -> str:
 def generate(state: RagState) -> dict:
     prompt = build_prompt(state["question"], state["chunks"])
 
-    logger.info("tool_call=generate model={} chunks={}", CHAT_MODEL, len(state["chunks"]))
+    logger.info("tool_call=generate model={} chunks={}", Config.Chat.MODEL, len(state["chunks"]))
     response = get_client().chat.completions.create(
-        model=CHAT_MODEL,
+        model=Config.Chat.MODEL,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt},
@@ -70,8 +70,8 @@ def generate(state: RagState) -> dict:
 
     usage = response.usage
     cost = (
-        usage.prompt_tokens * PRICE_PER_PROMPT_TOKEN
-        + usage.completion_tokens * PRICE_PER_COMPLETION_TOKEN
+        usage.prompt_tokens * Config.Chat.PRICE_PER_PROMPT_TOKEN
+        + usage.completion_tokens * Config.Chat.PRICE_PER_COMPLETION_TOKEN
     )
     logger.info(
         "tool_call=generate result prompt_tokens={} completion_tokens={} cost={:.6f}",
