@@ -72,16 +72,23 @@ The original graph was a straight line (`retrieve` always ran, `generate` always
 - [x] `scripts/generate_eval_questions.py` (now backed by `evaluation/ground_truth.py`): samples 5 chunks/article, asks gpt-4o-mini for one specific question per chunk → `eval/ground_truth.json` (100 questions generated, committed as a data artifact).
 - [x] `scripts/evaluate_retrieval.py` (now backed by `evaluation/retrieval.py`): compares 3 approaches - vector-only (pgvector cosine), full-text (Postgres `ts_rank`), hybrid (reciprocal rank fusion of both) - via Hit Rate@5 and MRR@5. Post-refactor, this calls the exact same `db.vector_search_chunks`/`text_search_chunks` the live tool uses - no more parallel SQL implementations to keep in sync.
 - [x] Wired `./eval:/srv/app/eval` into `docker-compose.yml` + `Dockerfile` so eval artifacts persist on the host instead of being lost inside the container.
-- [x] **Ran `make eval-retrieval`** → `eval/retrieval_results.md`: vector 0.780/0.606, text 0.230/0.220, **hybrid (winner) 0.820/0.655** (Hit Rate@5/MRR@5).
-- [ ] Set the winning approach (hybrid) as the default inside `tools_node` in `app/rag_graph.py` - the live tool still calls `vector_search_chunks` only.
-- [ ] Note: chunking changed since these numbers were produced (300-word custom split → 900-char `RecursiveCharacterTextSplitter`, Phase 0.1) - **re-run `make eval-retrieval` before trusting/publishing these numbers**, they're stale against the current chunk boundaries.
+- [x] **Ran `make eval-retrieval`** → `eval/retrieval_results.md`: vector 0.780/0.606, text 0.230/0.220, **hybrid (winner) 0.820/0.655** (Hit Rate@5/MRR@5). (Superseded, see below.)
+- [x] Set the winning approach (hybrid) as the default inside `tools_node` in `app/rag_graph.py` - `search_travel_kb` now calls `db.hybrid_search_chunks` (RRF fusion, extracted into `db/rag_data.py` and reused by both the live tool and `evaluation/retrieval.py`).
+- [x] Regenerated `eval/ground_truth.json` (`make eval-questions`) and re-ran `make eval-retrieval` against current 900-char chunking (old numbers were fully stale - old chunk IDs no longer matched current chunk boundaries, giving 0.000 across the board until regenerated). Current numbers: vector 0.920/0.827, text 0.180/0.175, hybrid 0.920/0.838, **hybrid+rerank (winner) 0.930/0.897**.
 - [ ] Document the comparison table in README.
 
 ## Phase 3 — LLM evaluation ⬜ NOT STARTED
 
-- [ ] `scripts/evaluate_llm.py`: run ≥2 prompt/system-instruction variants through `app/rag_graph.py` for the eval question set, then use `gpt-4o-mini` as LLM-judge to score each answer's relevance. Reuse the exact vocabulary already in the schema: `feedback.relevance` is `RELEVANT`/`PARTLY_RELEVANT`/`NON_RELEVANT` (see `db/init.sql`).
-- [ ] Aggregate scores per prompt variant, pick the winner, set as the default `SYSTEM_PROMPT` in `app/rag_graph.py`, document results.
-- [ ] Given Phase 1.1: also track whether the judge should penalize/note cases where the model *should* have called `search_travel_kb` but didn't (or vice versa) - the agentic flow adds a dimension naive RAG eval doesn't have.
+Reference: [course evaluation module](https://github.com/DataTalksClub/llm-zoomcamp/blob/main/04-evaluation/README.md), part 2 (`lessons/11-14`) - answer-quality judging (`13-llm-as-judge.md`) + agent tool-trajectory judging (`14-agent-evaluation.md`). Course's answer-judge is a Pydantic model with binary `score` (`"good"`/`"bad"`) + `reasoning`, run in parallel (6 workers) over question/original-answer/RAG-answer triples, aggregated to a good% and a running API cost. Our plan already deliberately deviates on the label set (below) - everything else lines up with what's built here.
+
+- [ ] `scripts/evaluate_llm.py`: run ≥2 prompt/system-instruction variants through `app/rag_graph.py` for the eval question set, then use `gpt-4o-mini` as LLM-judge to score each answer's relevance. Reuse the exact vocabulary already in the schema (`RELEVANT`/`PARTLY_RELEVANT`/`NON_RELEVANT`, see `db/init.sql`) instead of the course's binary good/bad - deliberate choice so judge output is directly writable to `feedback.relevance` and shows up on the same Grafana panel as real user feedback (Phase 4 stretch panel).
+- [ ] Judge prompt takes question + ground-truth chunk content (we don't have a separate FAQ "original answer" like the course does, so grounding is the retrieved chunk itself) + the RAG pipeline's answer; output structured (Pydantic) `relevance` + `reasoning`, matching the course's score+reasoning shape.
+- [ ] Aggregate scores per prompt variant, pick the winner, set as the default `SYSTEM_PROMPT` in `app/rag_graph.py`, document results (relevance-label breakdown % + total judge API cost, matching course's "96% good, ~$0.25" reporting style).
+- [ ] Given Phase 1.1's agentic tool-calling, adopt the course's trajectory-evaluation split rather than a single answer score:
+  - Capture the tool-call trajectory per question - just the `search_travel_kb` calls made before the final answer (query args), same shape as the course's `[{"name": "search", "arguments": {...}}]` record. Already recoverable from `RagState["messages"]`/`chunks`.
+  - Judge trajectory *separately* from answer quality: were the search queries relevant, did they carry the right keywords, was call count reasonable (course heuristic: 1 call usually enough, 2-3 okay, >3 needs a clear reason - matches our existing `MAX_TOOL_ROUNDS = 3` cap).
+  - Report answer-quality and trajectory-quality as two separate aggregate numbers, not one blended score - the course's own run surfaced an asymmetry (45/50 answers good, 49/50 trajectories good) that's only visible if they're kept apart: a good trajectory with a bad answer means the model had the right context and used it poorly; a bad trajectory means retrieval/query-rewriting itself is the problem.
+  - Also track the previously-noted gap: cases where the model *should* have called `search_travel_kb` but didn't (or called it when it shouldn't have) - not something the course's FAQ-bot setup needs to handle (no small-talk-vs-retrieval decision there), but real here given Phase 1.1's conditional retrieval.
 
 ## Phase 4 — Real monitoring dashboard ⬜ NOT STARTED
 
@@ -109,11 +116,14 @@ Feedback collection already works (thumbs up/down → `feedback` table). The das
 
 ## Phase 6 — Optional bonus points (not required for the core 20)
 
+Reference: [course best-practices writeup](https://github.com/DataTalksClub/llm-zoomcamp/blob/main/06-best-practices/README.md) - names 5 RAG-improvement techniques (`lessons/01-intro.md`): small-to-big chunk retrieval, document metadata, hybrid search, query rewriting, reranking. 3/5 done.
+
 - [x] Query rewriting (+1) - **done as a side effect of Phase 1.1**: the agentic tool-calling model rephrases the raw user question into a search query before calling `search_travel_kb` (verified live: "What food should I try in Bangkok?" → tool called with query "food to try in Bangkok"). Worth calling out explicitly in the README best-practices section.
-- [ ] Hybrid search (+1) - retrieval eval already picked hybrid as the winner (Phase 2), but the live tool still only calls `vector_search_chunks` - not wired in yet.
-- [ ] Re-ranking (+1) - cross-encoder rerank of top-k chunks before generation.
-- [ ] Cloud deployment (+2) - out of scope unless requested.
-- [ ] Agentic RAG / tool-calling itself (Phase 1.1) isn't one of the three named bonus techniques above, but is a real "best practice" beyond the naive baseline - worth a mention in README's best-practices writeup even though it doesn't map to a listed +1.
+- [x] Hybrid search (+1) - retrieval eval already picked hybrid as the winner (Phase 2), and the live tool now calls `db.hybrid_search_chunks` too.
+- [x] Re-ranking (+1) - `embedding.rerank_chunks` (fastembed `TextCrossEncoder`, `Xenova/ms-marco-MiniLM-L-6-v2`) reranks a top-`RERANK_CANDIDATE_K` (20) hybrid candidate pool down to `TOP_K` (5) before generation, wired into `search_travel_kb` in `app/rag_graph.py`. Confirmed with a fresh `make eval-questions` + `make eval-retrieval` run (ground truth regenerated to match the current 900-char chunking, old numbers were stale/all-zero against re-chunked IDs): hybrid 0.920/0.838 → **hybrid+rerank (winner) 0.930/0.897** (Hit Rate@5/MRR@5).
+- [ ] Small-to-big chunk retrieval - embed/search small chunks, but pass the LLM surrounding context (parent article section or neighboring chunks) instead of just the matched chunk. Course points at LangChain's `ParentDocumentRetriever` as reference. Not started.
+- [ ] Document metadata - use `rag_data.title`/`source`/`fetched_at` to filter or boost results (e.g. bias toward the article whose title matches a city mentioned in the query) before/alongside ranking. Not started.
+- [ ] Agentic RAG / tool-calling itself (Phase 1.1) isn't one of the 5 named techniques above, but is a real "best practice" beyond the naive baseline - worth a mention in README's best-practices writeup even though it doesn't map to a listed +1.
 
 ---
 

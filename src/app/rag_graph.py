@@ -10,8 +10,8 @@ from langgraph.graph import END, START, MessagesState, StateGraph
 from loguru import logger as LOGGER
 
 from config import Config
-from db import get_connection, vector_search_chunks
-from embedding import embed_query
+from db import get_connection, hybrid_search_chunks
+from embedding import embed_query, rerank_chunks
 
 MAX_TOOL_ROUNDS = 3
 
@@ -33,7 +33,10 @@ def search_travel_kb(query: str) -> tuple[str, list[dict]]:
     """Search the travel knowledge base for destination, culture, food, or transport info."""
     embedding = embed_query(query)
     with get_connection() as conn:
-        results = vector_search_chunks(conn, embedding, top_k=Config.Retrieval.TOP_K)
+        candidates = hybrid_search_chunks(
+            conn, embedding, query, top_k=Config.Retrieval.RERANK_CANDIDATE_K, rrf_k=Config.Retrieval.RRF_K
+        )
+    results = rerank_chunks(query, candidates, top_k=Config.Retrieval.TOP_K)
 
     LOGGER.info(
         "tool_call=search_travel_kb query={!r} count={} titles={}",

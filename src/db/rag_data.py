@@ -120,6 +120,24 @@ def text_search_chunks(conn, query_text: str, top_k: int = 5) -> list[dict]:
     ]
 
 
+def hybrid_search_chunks(
+    conn, query_embedding: list[float], query_text: str, top_k: int = 5, rrf_k: int = 60
+) -> list[dict]:
+    """Reciprocal rank fusion of vector and text search rankings, full chunk rows."""
+    vec_results = vector_search_chunks(conn, query_embedding, top_k=top_k)
+    text_results = text_search_chunks(conn, query_text, top_k=top_k)
+
+    by_id = {r["chunk_id"]: r for r in vec_results + text_results}
+    scores: dict[int, float] = {}
+    for rank, r in enumerate(vec_results):
+        scores[r["chunk_id"]] = scores.get(r["chunk_id"], 0) + 1 / (rrf_k + rank + 1)
+    for rank, r in enumerate(text_results):
+        scores[r["chunk_id"]] = scores.get(r["chunk_id"], 0) + 1 / (rrf_k + rank + 1)
+
+    ranked_ids = sorted(scores, key=scores.get, reverse=True)[:top_k]
+    return [by_id[chunk_id] for chunk_id in ranked_ids]
+
+
 def truncate_rag_data(conn) -> None:
     with conn.cursor() as cur:
         cur.execute("TRUNCATE TABLE rag_data_chunks, rag_data RESTART IDENTITY CASCADE")

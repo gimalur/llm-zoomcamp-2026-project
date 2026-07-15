@@ -31,6 +31,8 @@ class Config:
     class Retrieval:
         TOP_K = 5
         RRF_K = 60  # standard reciprocal-rank-fusion constant, hybrid eval
+        RERANK_MODEL = "Xenova/ms-marco-MiniLM-L-6-v2"
+        RERANK_CANDIDATE_K = 20  # pool size pulled from hybrid search before rerank cuts to TOP_K
 
     class Eval:
         SAMPLES_PER_DOCUMENT = 5  # ground-truth questions sampled per document

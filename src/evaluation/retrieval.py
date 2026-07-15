@@ -1,21 +1,6 @@
 from config import Config
-from db import text_search_chunks, vector_search_chunks
-from embedding import embed_documents
-
-
-def hybrid_search(conn, query_embedding: list[float], question: str, top_k: int) -> list[int]:
-    """Reciprocal rank fusion of the vector and text result rankings."""
-    vec_ids = [r["chunk_id"] for r in vector_search_chunks(conn, query_embedding, top_k=50)]
-    text_ids = [r["chunk_id"] for r in text_search_chunks(conn, question, top_k=50)]
-
-    scores: dict[int, float] = {}
-    for rank, chunk_id in enumerate(vec_ids):
-        scores[chunk_id] = scores.get(chunk_id, 0) + 1 / (Config.Retrieval.RRF_K + rank + 1)
-    for rank, chunk_id in enumerate(text_ids):
-        scores[chunk_id] = scores.get(chunk_id, 0) + 1 / (Config.Retrieval.RRF_K + rank + 1)
-
-    ranked = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
-    return [chunk_id for chunk_id, _ in ranked[:top_k]]
+from db import hybrid_search_chunks, text_search_chunks, vector_search_chunks
+from embedding import embed_documents, rerank_chunks
 
 
 def hit_rate_and_mrr(results: list[list[int]], true_ids: list[int]) -> tuple[float, float]:
@@ -36,14 +21,21 @@ def evaluate(conn, ground_truth: list[dict]) -> dict[str, tuple[float, float]]:
     true_ids = [item["chunk_id"] for item in ground_truth]
     embeddings = embed_documents(questions)
 
-    vector_results, text_results, hybrid_results = [], [], []
+    vector_results, text_results, hybrid_results, rerank_results = [], [], [], []
     for question, embedding in zip(questions, embeddings):
         vector_results.append([r["chunk_id"] for r in vector_search_chunks(conn, embedding, Config.Retrieval.TOP_K)])
         text_results.append([r["chunk_id"] for r in text_search_chunks(conn, question, Config.Retrieval.TOP_K)])
-        hybrid_results.append(hybrid_search(conn, embedding, question, Config.Retrieval.TOP_K))
+
+        hybrid_candidates = hybrid_search_chunks(
+            conn, embedding, question, top_k=Config.Retrieval.RERANK_CANDIDATE_K, rrf_k=Config.Retrieval.RRF_K
+        )
+        hybrid_results.append([r["chunk_id"] for r in hybrid_candidates[: Config.Retrieval.TOP_K]])
+        reranked = rerank_chunks(question, hybrid_candidates, top_k=Config.Retrieval.TOP_K)
+        rerank_results.append([r["chunk_id"] for r in reranked])
 
     return {
         "vector": hit_rate_and_mrr(vector_results, true_ids),
         "text": hit_rate_and_mrr(text_results, true_ids),
         "hybrid": hit_rate_and_mrr(hybrid_results, true_ids),
+        "hybrid+rerank": hit_rate_and_mrr(rerank_results, true_ids),
     }

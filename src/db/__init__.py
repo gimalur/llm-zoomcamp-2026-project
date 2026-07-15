@@ -8,6 +8,7 @@ from .conversations import (
 )
 from .rag_data import (
     existing_titles,
+    hybrid_search_chunks,
     insert_chunks,
     list_chunks,
     list_documents,
@@ -26,6 +27,7 @@ __all__ = [
     "save_feedback",
     "truncate_conversations",
     "existing_titles",
+    "hybrid_search_chunks",
     "insert_chunks",
     "list_chunks",
     "list_documents",
