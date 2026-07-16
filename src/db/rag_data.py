@@ -61,6 +61,13 @@ def list_chunks(conn, rag_data_id: int) -> list[tuple[int, str]]:
         return cur.fetchall()
 
 
+def get_chunk_content(conn, chunk_id: int) -> str:
+    with conn.cursor() as cur:
+        cur.execute("SELECT content FROM rag_data_chunks WHERE id = %s", (chunk_id,))
+        row = cur.fetchone()
+        return row[0] if row else ""
+
+
 def vector_search_chunks(conn, query_embedding: list[float], top_k: int = 5) -> list[dict]:
     """Cosine-similarity search over chunk embeddings (pgvector `<=>`)."""
     with conn.cursor() as cur:

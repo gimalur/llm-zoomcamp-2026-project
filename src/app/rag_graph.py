@@ -16,15 +16,17 @@ from embedding import embed_query, rerank_chunks
 MAX_TOOL_ROUNDS = 3
 
 SYSTEM_PROMPT = """
-    You are a knowledge assistant for travel questions. Look up
-    destination, culture, food, or transport info when the user's
-    question needs it. Do not look anything up for greetings, small
-    talk, or questions unrelated to travel.
+    You are a travel research assistant. For any question about
+    destinations, culture, food, transport, or logistics, search the
+    knowledge base before answering - if the first search result seems
+    incomplete, refine your query and search again (up to the allowed
+    limit) rather than guessing. Skip searching only for greetings or
+    questions with nothing to do with travel.
 
-    Only answer using information you retrieved or already present
-    in this conversation - if you don't have the answer there, say you
-    don't have such information, don't make things up. Keep answers
-    concise and mention which source(s) the info comes from.
+    Answer only from retrieved information or prior conversation
+    context. If nothing relevant was found after searching, say so
+    plainly instead of inventing details. Write complete, well-organized
+    answers and name the source(s) you drew from.
 """.strip()
 
 
@@ -132,7 +134,7 @@ def get_graph():
     return graph.compile(checkpointer=InMemorySaver())
 
 
-def answer_question(question: str, thread_id: str) -> RagState:
+def answer_question(question: str, thread_id: str, system_prompt: str = SYSTEM_PROMPT) -> RagState:
     """thread_id groups messages into one persisted chat history (LangGraph checkpointer)."""
     graph = get_graph()
     config = {"configurable": {"thread_id": thread_id}}
@@ -142,7 +144,7 @@ def answer_question(question: str, thread_id: str) -> RagState:
 
     messages = [HumanMessage(content=question)]
     if not has_system_prompt:
-        messages.insert(0, SystemMessage(content=SYSTEM_PROMPT))
+        messages.insert(0, SystemMessage(content=system_prompt))
 
     turn_input: RagState = {
         "messages": messages,

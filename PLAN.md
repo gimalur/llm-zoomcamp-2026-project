@@ -21,6 +21,23 @@ LLM provider: **OpenAI `gpt-4o-mini`** for both chat answers and as LLM-judge in
 | 9 | Reproducibility | README + `.env.example` exist, but no dependency-version doc, no screenshots | 1/2 |
 | 10 | Best practices bonus | None (hybrid/rerank/query-rewrite) | 0/3 |
 
+## Score estimate now (~17/20 core points, +3/3 bonus)
+
+| # | Category | Status | Est. pts |
+|---|---|---|---|
+| 1 | Problem description | Not written in README yet (Phase 5) | 0/2 |
+| 2 | Retrieval flow | Agentic tool-calling RAG, hybrid+rerank retrieval | **2/2** |
+| 3 | Retrieval evaluation | vector/text/hybrid/rerank compared, hybrid+rerank winner (`eval/retrieval_results.md`) | **2/2** |
+| 4 | LLM evaluation | concise vs thorough prompt, LLM-judge, thorough winner 85% vs 65% RELEVANT (`eval/llm_results.md`) | **2/2** |
+| 5 | Interface | Chainlit UI (real chat app) | **2/2** |
+| 6 | Ingestion pipeline | `scripts/ingest_wikivoyage.py` - automated, idempotent | **2/2** |
+| 7 | Monitoring | Feedback (thumbs) + 6-panel Grafana dashboard (charts, not raw dumps) | **2/2** |
+| 8 | Containerization | Everything in docker-compose (3 services) | **2/2** |
+| 9 | Reproducibility | README + `.env.example` exist, but no dependency-version doc, no screenshots (Phase 5) | 1/2 |
+| 10 | Best practices bonus | Query rewriting + hybrid search + reranking, all done (Phase 6) | **3/3** |
+
+Remaining core gap: Problem description + Reproducibility polish, both in Phase 5 (docs) - not code work.
+
 ---
 
 ## Phase 0 — Chunking (prerequisite for real retrieval) ✅ DONE
@@ -77,32 +94,25 @@ The original graph was a straight line (`retrieve` always ran, `generate` always
 - [x] Regenerated `eval/ground_truth.json` (`make eval-questions`) and re-ran `make eval-retrieval` against current 900-char chunking (old numbers were fully stale - old chunk IDs no longer matched current chunk boundaries, giving 0.000 across the board until regenerated). Current numbers: vector 0.920/0.827, text 0.180/0.175, hybrid 0.920/0.838, **hybrid+rerank (winner) 0.930/0.897**.
 - [ ] Document the comparison table in README.
 
-## Phase 3 — LLM evaluation ⬜ NOT STARTED
+## Phase 3 — LLM evaluation ✅ DONE (core; trajectory split deferred)
 
-Reference: [course evaluation module](https://github.com/DataTalksClub/llm-zoomcamp/blob/main/04-evaluation/README.md), part 2 (`lessons/11-14`) - answer-quality judging (`13-llm-as-judge.md`) + agent tool-trajectory judging (`14-agent-evaluation.md`). Course's answer-judge is a Pydantic model with binary `score` (`"good"`/`"bad"`) + `reasoning`, run in parallel (6 workers) over question/original-answer/RAG-answer triples, aggregated to a good% and a running API cost. Our plan already deliberately deviates on the label set (below) - everything else lines up with what's built here.
+Reference: [course evaluation module](https://github.com/DataTalksClub/llm-zoomcamp/blob/main/04-evaluation/README.md), part 2 (`lessons/11-14`) - answer-quality judging (`13-llm-as-judge.md`) + agent tool-trajectory judging (`14-agent-evaluation.md`). Course's answer-judge is a Pydantic model with binary `score` (`"good"`/`"bad"`) + `reasoning`, run in parallel (6 workers) over question/original-answer/RAG-answer triples, aggregated to a good% and a running API cost. Our plan deliberately deviates on the label set (below) - everything else lines up with what's built here.
 
-- [ ] `scripts/evaluate_llm.py`: run ≥2 prompt/system-instruction variants through `app/rag_graph.py` for the eval question set, then use `gpt-4o-mini` as LLM-judge to score each answer's relevance. Reuse the exact vocabulary already in the schema (`RELEVANT`/`PARTLY_RELEVANT`/`NON_RELEVANT`, see `db/init.sql`) instead of the course's binary good/bad - deliberate choice so judge output is directly writable to `feedback.relevance` and shows up on the same Grafana panel as real user feedback (Phase 4 stretch panel).
-- [ ] Judge prompt takes question + ground-truth chunk content (we don't have a separate FAQ "original answer" like the course does, so grounding is the retrieved chunk itself) + the RAG pipeline's answer; output structured (Pydantic) `relevance` + `reasoning`, matching the course's score+reasoning shape.
-- [ ] Aggregate scores per prompt variant, pick the winner, set as the default `SYSTEM_PROMPT` in `app/rag_graph.py`, document results (relevance-label breakdown % + total judge API cost, matching course's "96% good, ~$0.25" reporting style).
-- [ ] Given Phase 1.1's agentic tool-calling, adopt the course's trajectory-evaluation split rather than a single answer score:
-  - Capture the tool-call trajectory per question - just the `search_travel_kb` calls made before the final answer (query args), same shape as the course's `[{"name": "search", "arguments": {...}}]` record. Already recoverable from `RagState["messages"]`/`chunks`.
-  - Judge trajectory *separately* from answer quality: were the search queries relevant, did they carry the right keywords, was call count reasonable (course heuristic: 1 call usually enough, 2-3 okay, >3 needs a clear reason - matches our existing `MAX_TOOL_ROUNDS = 3` cap).
-  - Report answer-quality and trajectory-quality as two separate aggregate numbers, not one blended score - the course's own run surfaced an asymmetry (45/50 answers good, 49/50 trajectories good) that's only visible if they're kept apart: a good trajectory with a bad answer means the model had the right context and used it poorly; a bad trajectory means retrieval/query-rewriting itself is the problem.
-  - Also track the previously-noted gap: cases where the model *should* have called `search_travel_kb` but didn't (or called it when it shouldn't have) - not something the course's FAQ-bot setup needs to handle (no small-talk-vs-retrieval decision there), but real here given Phase 1.1's conditional retrieval.
+- [x] `src/evaluation/llm_judge.py`: Pydantic `RelevanceJudgment` (`RELEVANT`/`PARTLY_RELEVANT`/`NON_RELEVANT` + `reasoning`, reusing the exact vocabulary already in `db/init.sql`'s `feedback.relevance` instead of the course's binary good/bad - so judge output is directly writable to that column and shows up on the same Grafana panel as real user feedback). `evaluate_variant()` runs generation + judging in parallel (`ThreadPoolExecutor`, 6 workers, matching the course) over the 100-question ground-truth set; `aggregate()` rolls up relevance-label %, tool-called %, avg tool rounds, total cost.
+- [x] `src/scripts/evaluate_llm.py`: ≥2 system-prompt variants run through `app/rag_graph.answer_question(..., system_prompt=...)` (added a `system_prompt` param, default unchanged) - `concise` (original wording) vs `thorough` (explicitly tells the model to search before answering and refine on a weak first hit). Judge prompt grounds on the retrieved chunk's own content via new `db.get_chunk_content` (no separate FAQ "original answer" exists here, so the ground-truth chunk plays that role) + the RAG answer.
+- [x] **Ran `make eval-llm`** (100 questions × 2 variants, container restarted first for a clean in-memory checkpointer) → `eval/llm_results.md`: concise 65.0% RELEVANT / 71% tool-called, **thorough (winner) 85.0% RELEVANT / 94% tool-called**, total judge+generation cost $0.066 for both variants combined. Root cause of the gap: the concise prompt let the model skip retrieval more often (matches the previously-noted risk that agentic gating could silently under-trigger the tool).
+- [x] Set `thorough` as the new default `SYSTEM_PROMPT` in `app/rag_graph.py`.
+- [ ] Trajectory-quality judging kept separate from answer-quality (course's `14-agent-evaluation.md` split: judge the `search_travel_kb` query args themselves, not just the final answer) - not built yet. Current script only reports tool-called % and avg tool rounds as a proxy, not a judged trajectory score. Worth a follow-up pass if time allows, not blocking for rubric points.
+- [ ] Document the `eval/llm_results.md` comparison table in README (Phase 5).
 
-## Phase 4 — Real monitoring dashboard ⬜ NOT STARTED
+## Phase 4 — Real monitoring dashboard ✅ DONE (mostly; two panel swaps optional)
 
-Feedback collection already works (thumbs up/down → `feedback` table). The dashboard just needs real charts, not raw-table dumps.
+Landed in `5e07cc4` (before this plan doc was updated to match - was stale, marked NOT STARTED). `grafana/provisioning/dashboards/json/llm_monitor.json` has 6 panels on the `postgresql` datasource: table (Recent Conversations), barchart (Model Usage), piechart (Feedback Relevance - the Phase 3 stretch panel, now fed by real judge labels via `feedback.relevance`), timeseries × 3 (Response Time, Token Usage, Cost).
 
-- [ ] `grafana/provisioning/dashboards/json/`: add ≥5 chart panels (reuse datasource `uid: postgresql`):
-  1. Conversations over time (time series)
-  2. Feedback score breakdown (thumbs up vs down)
-  3. Average `response_time` over time
-  4. Cost / token usage over time
-  5. Model usage breakdown
-  6. (stretch) Relevance distribution once Phase 3 judge labels land in `feedback.relevance`
-- [ ] Keep the existing 3 raw-table panels too.
-- [ ] Verify with a fresh `grafana_data` volume.
+- [x] ≥5 chart panels added (6 total), reusing existing datasource.
+- [x] Relevance-distribution stretch panel already present (originally listed as "stretch, once Phase 3 lands" - Phase 3 now done, so this panel has real data to show, not just user thumbs feedback).
+- [ ] Original plan wanted "Conversations over time" as its own time series and a literal thumbs-up-vs-down breakdown panel - current dashboard covers the same ground differently (table + relevance piechart) rather than those two exact chart types. Optional swap, not blocking.
+- [ ] Verify with a fresh `grafana_data` volume (not yet re-verified since this plan update).
 
 ## Phase 5 — Documentation ⬜ NOT STARTED
 
