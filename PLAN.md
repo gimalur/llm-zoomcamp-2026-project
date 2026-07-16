@@ -82,9 +82,9 @@ The original graph was a straight line (`retrieve` always ran, `generate` always
 - [x] `conversations.source` renamed from `course` (matches the Phase 0.1 rename); citations in the reply only appear when the tool actually ran (chunks list is empty otherwise).
 - [x] **Verified live**: "What is 2+2?" → tool not called, 0 chunks, honest "I don't have information on that topic." "What food should I try in Bangkok?" → tool called, chunks retrieved, grounded cited answer. Empty-DB case also verified: tool still called, 0 results, model said so instead of making something up.
 - [ ] Known gap: Phase 2/3 evaluation scripts assume one deterministic retrieval per question - agentic retrieval is now conditional on the model's own judgment, so LLM-evaluation (Phase 3, not yet built) will need to account for "did it call the tool at all," not just score the final answer.
-- [ ] `main.py` still hardcodes `source="wikivoyage"` on every saved conversation even though a given answer may not have retrieved anything - not yet fixed.
+- [x] Fixed: `main.py` now saves `source="wikivoyage" if result["chunks"] else "none"` instead of hardcoding `"wikivoyage"` unconditionally - verified live: a greeting saves `source="none"`, a retrieval-backed answer saves `source="wikivoyage"`.
 
-## Phase 2 — Retrieval evaluation 🔧 IN PROGRESS
+## Phase 2 — Retrieval evaluation ✅ DONE
 
 - [x] `scripts/generate_eval_questions.py` (now backed by `evaluation/ground_truth.py`): samples 5 chunks/article, asks gpt-4o-mini for one specific question per chunk → `eval/ground_truth.json` (100 questions generated, committed as a data artifact).
 - [x] `scripts/evaluate_retrieval.py` (now backed by `evaluation/retrieval.py`): compares 3 approaches - vector-only (pgvector cosine), full-text (Postgres `ts_rank`), hybrid (reciprocal rank fusion of both) - via Hit Rate@5 and MRR@5. Post-refactor, this calls the exact same `db.vector_search_chunks`/`text_search_chunks` the live tool uses - no more parallel SQL implementations to keep in sync.

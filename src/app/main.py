@@ -121,7 +121,7 @@ async def on_message(message: cl.Message):
             thread_id=thread_id,
             question=question,
             answer=answer,
-            source="wikivoyage",
+            source="wikivoyage" if result["chunks"] else "none",
             model=Config.Chat.MODEL,
             instructions=SYSTEM_PROMPT,
             prompt=result["prompt"],
