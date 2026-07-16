@@ -21,22 +21,22 @@ LLM provider: **OpenAI `gpt-4o-mini`** for both chat answers and as LLM-judge in
 | 9 | Reproducibility | README + `.env.example` exist, but no dependency-version doc, no screenshots | 1/2 |
 | 10 | Best practices bonus | None (hybrid/rerank/query-rewrite) | 0/3 |
 
-## Score estimate now (~17/20 core points, +3/3 bonus)
+## Score estimate now (~19/20 core points, +3/3 bonus)
 
 | # | Category | Status | Est. pts |
 |---|---|---|---|
-| 1 | Problem description | Not written in README yet (Phase 5) | 0/2 |
+| 1 | Problem description | Written in README + expanded in `docs/architecture.md` | **2/2** |
 | 2 | Retrieval flow | Agentic tool-calling RAG, hybrid+rerank retrieval | **2/2** |
-| 3 | Retrieval evaluation | vector/text/hybrid/rerank compared, hybrid+rerank winner (`eval/retrieval_results.md`) | **2/2** |
-| 4 | LLM evaluation | concise vs thorough prompt, LLM-judge, thorough winner ~83-85% vs ~63-66% RELEVANT (`eval/llm_results.md`) | **2/2** |
+| 3 | Retrieval evaluation | vector/text/hybrid/rerank compared, hybrid+rerank winner (`eval/retrieval_results.md`, summarized in `docs/evaluation.md`) | **2/2** |
+| 4 | LLM evaluation | concise vs thorough prompt, LLM-judge, thorough winner ~83-85% vs ~63-66% RELEVANT (`eval/llm_results.md`, summarized in `docs/evaluation.md`) | **2/2** |
 | 5 | Interface | Chainlit UI (real chat app) | **2/2** |
 | 6 | Ingestion pipeline | `scripts/ingest_wikivoyage.py` - automated, idempotent | **2/2** |
 | 7 | Monitoring | Feedback (thumbs) + 6-panel Grafana dashboard (charts, not raw dumps) | **2/2** |
 | 8 | Containerization | Everything in docker-compose (3 services) | **2/2** |
-| 9 | Reproducibility | README + `.env.example` exist, but no dependency-version doc, no screenshots (Phase 5) | 1/2 |
+| 9 | Reproducibility | README + `.env.example` + `docs/configuration.md` (env vars, dependency versions) all exist; screenshots still missing | 1/2 |
 | 10 | Best practices bonus | Query rewriting + hybrid search + reranking, all done (Phase 6) | **3/3** |
 
-Remaining core gap: Problem description + Reproducibility polish, both in Phase 5 (docs) - not code work.
+Remaining core gap: screenshots only (`docs/screenshots.md` - manual TODO, no browser tool available here).
 
 ---
 
@@ -93,7 +93,7 @@ The original graph was a straight line (`retrieve` always ran, `generate` always
 - [x] Set the winning approach (hybrid) as the default inside `tools_node` in `app/rag_graph.py` - `search_travel_kb` now calls `db.hybrid_search_chunks` (RRF fusion, extracted into `db/rag_data.py` and reused by both the live tool and `evaluation/retrieval.py`).
 - [x] Regenerated `eval/ground_truth.json` (`make eval-questions`) and re-ran `make eval-retrieval` against current 900-char chunking (old numbers were fully stale - old chunk IDs no longer matched current chunk boundaries, giving 0.000 across the board until regenerated). Numbers at the time: vector 0.920/0.827, text 0.180/0.175, hybrid 0.920/0.838, **hybrid+rerank (winner) 0.930/0.897**.
 - [x] Regenerated again during the OOP refactor (see `ARCHITECTURE.md`) after an accidental `clear-db` mid-refactor wiped and re-fetched the knowledge base, shifting chunk IDs the same way as above. Current numbers: **hybrid+rerank (winner) 0.889/0.852** - same winner, small delta likely from live Wikivoyage content drift between fetches, not a regression.
-- [ ] Document the comparison table in README.
+- [x] Documented the comparison table in [`docs/evaluation.md`](docs/evaluation.md) (Phase 5).
 
 ## Phase 3 — LLM evaluation ✅ DONE (core; trajectory split deferred)
 
@@ -104,7 +104,7 @@ Reference: [course evaluation module](https://github.com/DataTalksClub/llm-zoomc
 - [x] **Ran `make eval-llm`** (100 questions × 2 variants, container restarted first for a clean in-memory checkpointer) → `eval/llm_results.md`: concise 65.0% RELEVANT / 71% tool-called, **thorough (winner) 85.0% RELEVANT / 94% tool-called**, total judge+generation cost $0.066 for both variants combined. Root cause of the gap: the concise prompt let the model skip retrieval more often (matches the previously-noted risk that agentic gating could silently under-trigger the tool).
 - [x] Set `thorough` as the new default `SYSTEM_PROMPT` in `app/rag_graph.py`.
 - [ ] Trajectory-quality judging kept separate from answer-quality (course's `14-agent-evaluation.md` split: judge the `search_travel_kb` query args themselves, not just the final answer) - not built yet. Current script only reports tool-called % and avg tool rounds as a proxy, not a judged trajectory score. Worth a follow-up pass if time allows, not blocking for rubric points.
-- [ ] Document the `eval/llm_results.md` comparison table in README (Phase 5).
+- [x] Documented the `eval/llm_results.md` comparison table in [`docs/evaluation.md`](docs/evaluation.md) (Phase 5).
 
 ## Phase 4 — Real monitoring dashboard ✅ DONE (mostly; two panel swaps optional)
 
@@ -115,15 +115,18 @@ Landed in `5e07cc4` (before this plan doc was updated to match - was stale, mark
 - [ ] Original plan wanted "Conversations over time" as its own time series and a literal thumbs-up-vs-down breakdown panel - current dashboard covers the same ground differently (table + relevance piechart) rather than those two exact chart types. Optional swap, not blocking.
 - [ ] Verify with a fresh `grafana_data` volume (not yet re-verified since this plan update).
 
-## Phase 5 — Documentation ⬜ NOT STARTED
+## Phase 5 — Documentation ✅ DONE (core; screenshots still open)
 
-- [ ] README: **Problem** section - what this assistant does and why.
-- [ ] README: **Architecture / flow** section referencing `app/rag_graph.py` - describe the agentic `agent ⇄ tools` graph (Phase 1.1), not the old linear `retrieve → generate`.
-- [ ] README: **Evaluation** section - link/summarize Phase 2 + Phase 3 results.
-- [ ] README: explicit env var reference table (include `ENV_TYPE`, added with `logger.py` in Phase 0.1).
-- [ ] README: key dependency versions (from `uv.lock`).
-- [ ] README: screenshots (chat UI with a real answer, Grafana dashboard with real charts).
-- [ ] README: repo layout section reflecting the `src/{app,db,ingestion,evaluation,scripts}` structure (Phase 0.1) - current README still describes the old flat `app/`/`scripts/` layout.
+Split across `README.md` (project intent, setup/launch/first-run instructions,
+everyday `make` commands - the stuff a new clone actually needs first) and
+`docs/*.md` (deeper reference, linked from README rather than inlined):
+
+- [x] README: **Problem** section - what this assistant does and why (one paragraph, top of README).
+- [x] Architecture / flow write-up moved to [`docs/architecture.md`](docs/architecture.md) - describes the agentic `agent ⇄ tools` graph (Phase 1.1), not the old linear `retrieve → generate`, plus the current `src/` repo layout and the best-practices techniques applied.
+- [x] Evaluation write-up moved to [`docs/evaluation.md`](docs/evaluation.md) - summarizes both Phase 2 (retrieval) and Phase 3 (LLM-judge) result tables with methodology, supersedes the two README-inline TODOs above.
+- [x] Env var reference table (including `ENV_TYPE`) + tunable-constants table + dependency versions moved to [`docs/configuration.md`](docs/configuration.md).
+- [x] Repo layout section reflecting the `src/{app,db,ingestion,evaluation,scripts,tests}` structure - in `docs/architecture.md`.
+- [ ] Screenshots (chat UI with a real answer, Grafana dashboard with real charts) - **not done**, no browser/screenshot tool available in this environment. Left as an explicit manual TODO in [`docs/screenshots.md`](docs/screenshots.md) with capture instructions, rather than faked or silently skipped.
 
 ## Phase 6 — Optional bonus points (not required for the core 20)
 

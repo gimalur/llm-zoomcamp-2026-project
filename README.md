@@ -1,29 +1,43 @@
-# Course Assistant (LLM Zoomcamp 2026 project)
+# Travel Course Assistant (LLM Zoomcamp 2026 project)
 
-Stub scaffold for an LLM Zoomcamp project: RAG-style course assistant with a chat UI, Postgres storage, and Grafana monitoring. Current iteration has no retrieval/agent logic yet - the chat just echoes messages and persists each question/answer turn to Postgres, wiring up the full stack end to end.
+A RAG-based travel assistant: a Chainlit chat UI backed by an agentic
+LangGraph pipeline that answers destination questions (food, culture,
+transport, logistics) grounded in a curated knowledge base of Wikivoyage
+articles - never from the LLM's own general knowledge. Retrieval is
+hybrid (vector + full-text, reciprocal rank fusion) with cross-encoder
+reranking. Conversations and feedback are logged to Postgres and surfaced
+on a Grafana dashboard.
+
+Built for the [LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp)
+course project. See [`docs/architecture.md`](docs/architecture.md) for the
+full problem statement and how the retrieval/generation flow works.
 
 ## Stack
 
-- **uv** - Python dependency management
-- **Chainlit** - chat UI (`chat-zoom` container, port 8001 on host)
-- **LangGraph** - agent framework (installed, not wired in yet)
-- **PostgreSQL + pgvector** - conversation storage and article embeddings (`postgres-zoom` container, port 5433 on host)
-- **fastembed** - lightweight (ONNX, no PyTorch) embeddings using `all-MiniLM-L6-v2`
-- **Grafana** - monitoring dashboards (`grafana-zoom` container, port 3001 on host)
+- **Chainlit** - chat UI (`chat-zoom` container, port 8001)
+- **LangGraph** - agentic tool-calling pipeline (`src/app/rag_graph.py`)
+- **PostgreSQL + pgvector** - conversations, feedback, and article embeddings (`postgres-zoom`, port 5433)
+- **fastembed** - embeddings (`all-MiniLM-L6-v2`) + reranking (`ms-marco-MiniLM-L-6-v2`), ONNX, no PyTorch
+- **OpenAI `gpt-4o-mini`** - chat answers, LLM-as-judge evaluation, ground-truth generation
+- **Grafana** - monitoring dashboard (`grafana-zoom`, port 3001)
 - **Docker Compose** - orchestration
+- **uv** - Python dependency management
 
 ## Prerequisites
 
 - Docker + Docker Compose
-- uv (only needed for local dependency management outside Docker, e.g. `make sync`)
+- An OpenAI API key
+- uv (only for local, non-Docker dependency work, e.g. `make sync`)
 
 ## Setup
 
-1. Copy the env template and fill in real values:
-   ```bash
-   cp .env.example .env
-   ```
-   Fill in `OPENAI_API_KEY` as needed. Postgres vars already default to working values for local dev.
+```bash
+cp .env.example .env
+```
+
+Fill in `OPENAI_API_KEY`. Postgres vars already default to working values
+for local dev - nothing else needs to change for a first run. Full
+variable reference: [`docs/configuration.md`](docs/configuration.md).
 
 ## Launch
 
@@ -31,46 +45,65 @@ Stub scaffold for an LLM Zoomcamp project: RAG-style course assistant with a cha
 docker compose up -d --build
 ```
 
-This starts all 3 containers:
+| Service | URL |
+|---|---|
+| Chat (Chainlit) | http://localhost:8001 |
+| Grafana | http://localhost:3001 (`admin` / `admin`, prompts for a password change) |
+| Postgres | localhost:5433 |
 
-| Service         | URL                    |
-|-----------------|------------------------|
-| Chat (Chainlit) | http://localhost:8001  |
-| Grafana         | http://localhost:3001  |
-| Postgres        | localhost:5433          |
+## First launch - load the knowledge base
 
-Grafana default login: `admin` / `admin` (prompts for password change on first login). The Postgres datasource and a "Database Tables" dashboard (raw table view of `conversations`, `feedback`, `articles`) are auto-provisioned on startup - both are files under `grafana/provisioning/`, tracked in git, so they reproduce identically on any machine without clicking through the Grafana UI.
-
-Open the chat UI, send a message - it gets echoed back and the turn is saved as a row in the `conversations` table in Postgres. Each reply has thumbs up/down buttons - voting saves a row in the `feedback` table linked to that conversation.
-
-The chat header has three screen-level links (not chat messages): **Grafana** opens the dashboard in a new tab, **Init DB** hits a route on the chat app that reseeds the database with fake data, and **Load Articles** hits a route that runs the Wikivoyage ingestion (same as `make db-ingest`).
-
-## Database - fake data
+The knowledge base is **empty** on a fresh start - the chat will run, but
+every question will get "I don't have that information" until it's
+populated. Load it once:
 
 ```bash
-make db-seed   # fill conversations + feedback tables with fake data (Faker)
-make db-drop   # truncate both tables
+make db-ingest
 ```
 
-## Knowledge base - Wikivoyage articles
+Fetches ~20 curated Wikivoyage destination articles, chunks and embeds
+them into Postgres. Idempotent and resumable - safe to rerun (already-ingested
+articles are skipped), useful if it gets interrupted by Wikivoyage's rate
+limiting. Takes a couple of minutes. You can also trigger this from the
+chat UI itself via the **Ingest Data** header link.
+
+Optionally, populate Grafana with demo rows (fake conversations/feedback,
+no real LLM calls) via the **Ingest fake data** header link or:
 
 ```bash
-make db-ingest   # fetch a curated set of Wikivoyage destination articles and embed them
+make db-ingest-fake
 ```
 
-Fetches full article text one title at a time via the MediaWiki API (batching isn't supported for full-article extracts), embeds each with `all-MiniLM-L6-v2` via fastembed, and upserts into the `articles` table (`source`, `title`, `url`, `content`, `embedding vector(384)`). Idempotent and resumable - already-ingested titles are skipped, so a run interrupted by Wikivoyage's rate limiting can just be rerun. No chunking yet, so the embedding only reflects each article's first ~256 tokens.
-
-## Other commands
+## Everyday commands
 
 ```bash
-make shell-chat  # bash shell inside the chat container
-make shell-db    # psql shell inside postgres
-make sync        # uv sync, for local (non-Docker) dependency install
+make test              # run the pytest suite (unit tests, no live DB/API calls)
+make db-ingest          # (re)load the Wikivoyage knowledge base
+make db-ingest-fake     # seed fake conversations + feedback (Grafana demo data)
+make db-drop            # truncate conversations + feedback only
+make db-clear           # full reset: conversations + feedback + knowledge base
+make eval-questions     # regenerate eval/ground_truth.json from the current knowledge base
+make eval-retrieval     # score retrieval strategies against ground truth
+make eval-llm           # score answer quality (LLM-as-judge) across prompt variants
+make shell-chat         # bash shell inside the chat container
+make shell-db           # psql shell inside postgres
+make sync               # uv sync, for local (non-Docker) dependency install
 ```
+
+`make eval-*` results are written to `eval/*.md` and summarized in
+[`docs/evaluation.md`](docs/evaluation.md).
 
 ## Stop
 
 ```bash
-docker compose down      # stop containers, keep volumes
+docker compose down      # stop containers, keep volumes (data survives)
 docker compose down -v   # stop containers and delete volumes (wipes Postgres/Grafana data)
 ```
+
+## Documentation
+
+- [`docs/architecture.md`](docs/architecture.md) - problem statement, the agentic retrieval/generation flow, code layout, best practices applied
+- [`docs/evaluation.md`](docs/evaluation.md) - retrieval and LLM-as-judge evaluation methodology and results
+- [`docs/configuration.md`](docs/configuration.md) - environment variables, tunable constants, dependency versions
+- [`docs/screenshots.md`](docs/screenshots.md) - chat UI / Grafana screenshots (manual TODO)
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) - standing design record of an OOP refactor pass (repository classes, `RagAgent`) - code review history, not day-to-day reading
