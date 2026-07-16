@@ -2,7 +2,7 @@ import random
 
 from faker import Faker
 
-from db.conversations import insert_conversation, insert_feedback
+from db import ConversationRepository
 
 fake = Faker()
 
@@ -15,12 +15,12 @@ RELEVANCE_LEVELS = ["RELEVANT", "PARTLY_RELEVANT", "NON_RELEVANT"]
 
 
 def seed(conn) -> None:
+    repo = ConversationRepository(conn)
     for _ in range(N_CONVERSATIONS):
         prompt_tokens = random.randint(50, 500)
         completion_tokens = random.randint(20, 300)
 
-        conversation_id = insert_conversation(
-            conn,
+        conversation_id = repo.save(
             thread_id=fake.uuid4(),
             question=fake.sentence(),
             answer=fake.paragraph(),
@@ -36,12 +36,10 @@ def seed(conn) -> None:
         )
 
         if random.random() < 0.5:
-            insert_feedback(
-                conn,
+            repo.save_feedback(
                 conversation_id=conversation_id,
                 source=random.choice(SOURCES),
                 relevance=random.choice(RELEVANCE_LEVELS),
                 explanation=fake.sentence(),
                 score=random.choice([-1, 1]),
             )
-    conn.commit()

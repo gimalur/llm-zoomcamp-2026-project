@@ -28,7 +28,7 @@ LLM provider: **OpenAI `gpt-4o-mini`** for both chat answers and as LLM-judge in
 | 1 | Problem description | Not written in README yet (Phase 5) | 0/2 |
 | 2 | Retrieval flow | Agentic tool-calling RAG, hybrid+rerank retrieval | **2/2** |
 | 3 | Retrieval evaluation | vector/text/hybrid/rerank compared, hybrid+rerank winner (`eval/retrieval_results.md`) | **2/2** |
-| 4 | LLM evaluation | concise vs thorough prompt, LLM-judge, thorough winner 85% vs 65% RELEVANT (`eval/llm_results.md`) | **2/2** |
+| 4 | LLM evaluation | concise vs thorough prompt, LLM-judge, thorough winner ~83-85% vs ~63-66% RELEVANT (`eval/llm_results.md`) | **2/2** |
 | 5 | Interface | Chainlit UI (real chat app) | **2/2** |
 | 6 | Ingestion pipeline | `scripts/ingest_wikivoyage.py` - automated, idempotent | **2/2** |
 | 7 | Monitoring | Feedback (thumbs) + 6-panel Grafana dashboard (charts, not raw dumps) | **2/2** |
@@ -91,7 +91,8 @@ The original graph was a straight line (`retrieve` always ran, `generate` always
 - [x] Wired `./eval:/srv/app/eval` into `docker-compose.yml` + `Dockerfile` so eval artifacts persist on the host instead of being lost inside the container.
 - [x] **Ran `make eval-retrieval`** → `eval/retrieval_results.md`: vector 0.780/0.606, text 0.230/0.220, **hybrid (winner) 0.820/0.655** (Hit Rate@5/MRR@5). (Superseded, see below.)
 - [x] Set the winning approach (hybrid) as the default inside `tools_node` in `app/rag_graph.py` - `search_travel_kb` now calls `db.hybrid_search_chunks` (RRF fusion, extracted into `db/rag_data.py` and reused by both the live tool and `evaluation/retrieval.py`).
-- [x] Regenerated `eval/ground_truth.json` (`make eval-questions`) and re-ran `make eval-retrieval` against current 900-char chunking (old numbers were fully stale - old chunk IDs no longer matched current chunk boundaries, giving 0.000 across the board until regenerated). Current numbers: vector 0.920/0.827, text 0.180/0.175, hybrid 0.920/0.838, **hybrid+rerank (winner) 0.930/0.897**.
+- [x] Regenerated `eval/ground_truth.json` (`make eval-questions`) and re-ran `make eval-retrieval` against current 900-char chunking (old numbers were fully stale - old chunk IDs no longer matched current chunk boundaries, giving 0.000 across the board until regenerated). Numbers at the time: vector 0.920/0.827, text 0.180/0.175, hybrid 0.920/0.838, **hybrid+rerank (winner) 0.930/0.897**.
+- [x] Regenerated again during the OOP refactor (see `ARCHITECTURE.md`) after an accidental `clear-db` mid-refactor wiped and re-fetched the knowledge base, shifting chunk IDs the same way as above. Current numbers: **hybrid+rerank (winner) 0.889/0.852** - same winner, small delta likely from live Wikivoyage content drift between fetches, not a regression.
 - [ ] Document the comparison table in README.
 
 ## Phase 3 — LLM evaluation ✅ DONE (core; trajectory split deferred)
@@ -129,7 +130,7 @@ Landed in `5e07cc4` (before this plan doc was updated to match - was stale, mark
 Reference: [course best-practices writeup](https://github.com/DataTalksClub/llm-zoomcamp/blob/main/06-best-practices/README.md) - names 5 RAG-improvement techniques (`lessons/01-intro.md`): small-to-big chunk retrieval, document metadata, hybrid search, query rewriting, reranking. 3/5 done.
 
 - [x] Query rewriting (+1) - **done as a side effect of Phase 1.1**: the agentic tool-calling model rephrases the raw user question into a search query before calling `search_travel_kb` (verified live: "What food should I try in Bangkok?" → tool called with query "food to try in Bangkok"). Worth calling out explicitly in the README best-practices section.
-- [x] Hybrid search (+1) - retrieval eval already picked hybrid as the winner (Phase 2), and the live tool now calls `db.hybrid_search_chunks` too.
+- [x] Hybrid search (+1) - retrieval eval already picked hybrid as the winner (Phase 2), and the live tool now calls `db.RagRepository.hybrid_search` too (renamed from `db.hybrid_search_chunks` during the OOP refactor, see `ARCHITECTURE.md`).
 - [x] Re-ranking (+1) - `embedding.rerank_chunks` (fastembed `TextCrossEncoder`, `Xenova/ms-marco-MiniLM-L-6-v2`) reranks a top-`RERANK_CANDIDATE_K` (20) hybrid candidate pool down to `TOP_K` (5) before generation, wired into `search_travel_kb` in `app/rag_graph.py`. Confirmed with a fresh `make eval-questions` + `make eval-retrieval` run (ground truth regenerated to match the current 900-char chunking, old numbers were stale/all-zero against re-chunked IDs): hybrid 0.920/0.838 → **hybrid+rerank (winner) 0.930/0.897** (Hit Rate@5/MRR@5).
 - [ ] Small-to-big chunk retrieval - embed/search small chunks, but pass the LLM surrounding context (parent article section or neighboring chunks) instead of just the matched chunk. Course points at LangChain's `ParentDocumentRetriever` as reference. Not started.
 - [ ] Document metadata - use `rag_data.title`/`source`/`fetched_at` to filter or boost results (e.g. bias toward the article whose title matches a city mentioned in the query) before/alongside ranking. Not started.

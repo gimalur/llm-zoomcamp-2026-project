@@ -1,14 +1,11 @@
-from db import get_connection, truncate_conversations
+from db import ConversationRepository, session
 
 
 def drop(conn) -> None:
-    truncate_conversations(conn)
+    ConversationRepository(conn).truncate()
 
 
 if __name__ == "__main__":
-    connection = get_connection()
-    try:
-        drop(connection)
-        print("Dropped all rows from conversations and feedback.")
-    finally:
-        connection.close()
+    with session() as conn:
+        drop(conn)
+    print("Dropped all rows from conversations and feedback.")

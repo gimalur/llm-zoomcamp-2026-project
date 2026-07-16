@@ -3,7 +3,7 @@ import json
 from openai import OpenAI
 
 from config import Config
-from db import list_chunks, list_documents
+from db import RagRepository
 
 PROMPT_TEMPLATE = """You are generating evaluation data for a Q&A retrieval system.
 
@@ -50,9 +50,10 @@ def generate_questions_for_article(client: OpenAI, article_title: str, chunks: l
 
 
 def generate(conn, client: OpenAI) -> list[dict]:
+    repo = RagRepository(conn)
     all_items = []
-    for rag_data_id, title in list_documents(conn):
-        chunk_rows = list_chunks(conn, rag_data_id)
+    for rag_data_id, title in repo.list_documents():
+        chunk_rows = repo.list_chunks(rag_data_id)
         if not chunk_rows:
             continue
 

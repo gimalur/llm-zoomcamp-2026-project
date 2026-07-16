@@ -1,41 +1,18 @@
-from .connection import get_connection
-from .conversations import (
-    insert_conversation,
-    insert_feedback,
-    save_conversation,
-    save_feedback,
-    truncate_conversations,
-)
-from .rag_data import (
-    existing_titles,
-    get_chunk_content,
-    hybrid_search_chunks,
-    insert_chunks,
-    list_chunks,
-    list_documents,
-    pending_documents,
-    save_document,
-    text_search_chunks,
-    truncate_rag_data,
-    vector_search_chunks,
-)
+from .connection import get_connection, session
+from .conversations import ConversationRepository
+from .rag_data import RagRepository
+
+
+def clear(conn) -> None:
+    """Full reset: conversations/feedback + the knowledge base (rag_data/rag_data_chunks)."""
+    ConversationRepository(conn).truncate()
+    RagRepository(conn).truncate()
+
 
 __all__ = [
     "get_connection",
-    "insert_conversation",
-    "insert_feedback",
-    "save_conversation",
-    "save_feedback",
-    "truncate_conversations",
-    "existing_titles",
-    "get_chunk_content",
-    "hybrid_search_chunks",
-    "insert_chunks",
-    "list_chunks",
-    "list_documents",
-    "pending_documents",
-    "save_document",
-    "text_search_chunks",
-    "truncate_rag_data",
-    "vector_search_chunks",
+    "session",
+    "clear",
+    "ConversationRepository",
+    "RagRepository",
 ]

@@ -1,6 +1,6 @@
-# LLM-judge evaluation (100 ground-truth questions, judge=gpt-4o-mini)
+# LLM-judge evaluation (99 ground-truth questions, judge=gpt-4o-mini)
 
 | Variant | RELEVANT | PARTLY_RELEVANT | NON_RELEVANT | Tool called | Avg tool rounds | Total cost |
 |---|---|---|---|---|---|---|
-| concise | 62.0% | 9.0% | 29.0% | 67.0% | 0.67 | $0.0262 |
-| thorough (winner) | 85.0% | 14.0% | 1.0% | 95.0% | 0.98 | $0.0383 |
+| concise | 62.6% | 8.1% | 29.3% | 66.7% | 0.67 | $0.0254 |
+| thorough (winner) | 82.8% | 12.1% | 5.1% | 88.9% | 0.91 | $0.0352 |

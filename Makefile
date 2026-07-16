@@ -1,7 +1,10 @@
-.PHONY: sync db-ingest-fake db-drop db-clear db-ingest eval-questions eval-retrieval eval-llm shell-chat shell-db
+.PHONY: sync test db-ingest-fake db-drop db-clear db-ingest eval-questions eval-retrieval eval-llm shell-chat shell-db
 
 sync:
 	uv sync
+
+test:
+	docker compose exec -w /srv/app/src chat-zoom python -m pytest tests -v
 
 db-ingest-fake:
 	docker compose exec chat-zoom python -m scripts.ingest_fake_db

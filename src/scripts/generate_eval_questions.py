@@ -4,19 +4,16 @@ from pathlib import Path
 
 from openai import OpenAI
 
-from db import get_connection
+from db import session
 from evaluation.ground_truth import generate
 
 OUTPUT_PATH = Path(__file__).resolve().parent.parent.parent / "eval" / "ground_truth.json"
 
 
 if __name__ == "__main__":
-    connection = get_connection()
     openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    try:
-        questions = generate(connection, openai_client)
-    finally:
-        connection.close()
+    with session() as conn:
+        questions = generate(conn, openai_client)
 
     OUTPUT_PATH.parent.mkdir(exist_ok=True)
     OUTPUT_PATH.write_text(json.dumps(questions, indent=2))

@@ -1,5 +1,5 @@
 from config import Config
-from db import hybrid_search_chunks, text_search_chunks, vector_search_chunks
+from db import RagRepository
 from embedding import embed_documents, rerank_chunks
 
 
@@ -17,17 +17,18 @@ def hit_rate_and_mrr(results: list[list[int]], true_ids: list[int]) -> tuple[flo
 
 
 def evaluate(conn, ground_truth: list[dict]) -> dict[str, tuple[float, float]]:
+    repo = RagRepository(conn)
     questions = [item["question"] for item in ground_truth]
     true_ids = [item["chunk_id"] for item in ground_truth]
     embeddings = embed_documents(questions)
 
     vector_results, text_results, hybrid_results, rerank_results = [], [], [], []
     for question, embedding in zip(questions, embeddings):
-        vector_results.append([r["chunk_id"] for r in vector_search_chunks(conn, embedding, Config.Retrieval.TOP_K)])
-        text_results.append([r["chunk_id"] for r in text_search_chunks(conn, question, Config.Retrieval.TOP_K)])
+        vector_results.append([r["chunk_id"] for r in repo.vector_search(embedding, Config.Retrieval.TOP_K)])
+        text_results.append([r["chunk_id"] for r in repo.text_search(question, Config.Retrieval.TOP_K)])
 
-        hybrid_candidates = hybrid_search_chunks(
-            conn, embedding, question, top_k=Config.Retrieval.RERANK_CANDIDATE_K, rrf_k=Config.Retrieval.RRF_K
+        hybrid_candidates = repo.hybrid_search(
+            embedding, question, top_k=Config.Retrieval.RERANK_CANDIDATE_K, rrf_k=Config.Retrieval.RRF_K
         )
         hybrid_results.append([r["chunk_id"] for r in hybrid_candidates[: Config.Retrieval.TOP_K]])
         reranked = rerank_chunks(question, hybrid_candidates, top_k=Config.Retrieval.TOP_K)

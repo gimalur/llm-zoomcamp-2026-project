@@ -3,7 +3,8 @@ from urllib.parse import quote
 
 import requests
 
-from db import existing_titles, save_document
+from db import RagRepository
+from ingestion.ingestor import chunk_and_embed_pending
 
 API_URL = "https://en.wikivoyage.org/w/api.php"
 SOURCE = "wikivoyage"
@@ -49,7 +50,8 @@ def fetch_extract(title: str) -> tuple[str, str] | None:
 
 def fetch_articles(conn) -> int:
     """Fetch missing titles from the Wikivoyage API and store full articles."""
-    done = existing_titles(conn, SOURCE)
+    repo = RagRepository(conn)
+    done = repo.existing_titles(SOURCE)
     count = 0
     for title in TITLES:
         if title in done:
@@ -62,6 +64,12 @@ def fetch_articles(conn) -> int:
         resolved_title, content = result
 
         url = f"https://en.wikivoyage.org/wiki/{quote(resolved_title.replace(' ', '_'))}"
-        save_document(conn, SOURCE, resolved_title, url, content)
+        repo.save_document(SOURCE, resolved_title, url, content)
         count += 1
     return count
+
+
+def ingest(conn) -> int:
+    """Fetch any missing Wikivoyage articles, then chunk+embed everything pending."""
+    fetch_articles(conn)
+    return chunk_and_embed_pending(conn, SOURCE)

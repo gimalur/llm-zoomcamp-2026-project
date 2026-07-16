@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from app.rag_graph import answer_question
 from config import Config
-from db import get_chunk_content
+from db import RagRepository
 
 JUDGE_PROMPT = """You are judging the quality of an answer from a travel Q&A assistant.
 
@@ -44,7 +44,7 @@ def judge_answer(client: OpenAI, question: str, context: str, answer: str) -> tu
 
 def _run_one(conn, client: OpenAI, item: dict, system_prompt: str, variant_name: str, index: int) -> dict:
     thread_id = f"eval-{variant_name}-{index}"
-    context = get_chunk_content(conn, item["chunk_id"])
+    context = RagRepository(conn).get_chunk_content(item["chunk_id"])
     result = answer_question(item["question"], thread_id, system_prompt=system_prompt)
     judgment, judge_cost = judge_answer(client, item["question"], context, result["answer"])
     return {

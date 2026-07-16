@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 from config import Config
-from db import get_connection
+from db import session
 from evaluation.retrieval import evaluate
 
 GROUND_TRUTH_PATH = Path(__file__).resolve().parent.parent.parent / "eval" / "ground_truth.json"
@@ -11,11 +11,8 @@ RESULTS_PATH = Path(__file__).resolve().parent.parent.parent / "eval" / "retriev
 
 if __name__ == "__main__":
     gt = json.loads(GROUND_TRUTH_PATH.read_text())
-    connection = get_connection()
-    try:
-        scores = evaluate(connection, gt)
-    finally:
-        connection.close()
+    with session() as conn:
+        scores = evaluate(conn, gt)
 
     winner = max(scores, key=lambda k: scores[k][1])  # best MRR@5
 

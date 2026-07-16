@@ -5,7 +5,7 @@ from pathlib import Path
 from openai import OpenAI
 
 from app.rag_graph import SYSTEM_PROMPT
-from db import get_connection
+from db import session
 from evaluation.llm_judge import aggregate, evaluate_variant
 
 GROUND_TRUTH_PATH = Path(__file__).resolve().parent.parent.parent / "eval" / "ground_truth.json"
@@ -31,17 +31,14 @@ VARIANTS = {
 
 if __name__ == "__main__":
     ground_truth = json.loads(GROUND_TRUTH_PATH.read_text())
-    connection = get_connection()
     client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
     scores = {}
-    try:
+    with session() as conn:
         for name, prompt in VARIANTS.items():
             print(f"Running variant {name!r} ({len(ground_truth)} questions)...")
-            results = evaluate_variant(connection, client, ground_truth, prompt, name)
+            results = evaluate_variant(conn, client, ground_truth, prompt, name)
             scores[name] = aggregate(results)
-    finally:
-        connection.close()
 
     winner = max(scores, key=lambda name: scores[name]["relevance_pct"]["RELEVANT"])
 
