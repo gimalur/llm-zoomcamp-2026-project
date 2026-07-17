@@ -6,3 +6,4 @@
 | text | 0.182 | 0.182 |
 | hybrid | 0.859 | 0.779 |
 | hybrid+rerank (winner) | 0.889 | 0.852 |
+| hybrid+rerank+rewrite | 0.869 | 0.816 |

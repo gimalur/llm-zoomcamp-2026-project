@@ -1,5 +1,8 @@
 import json
+import os
 from pathlib import Path
+
+from openai import OpenAI
 
 from config import Config
 from db import session
@@ -11,8 +14,9 @@ RESULTS_PATH = Path(__file__).resolve().parent.parent.parent / "eval" / "retriev
 
 if __name__ == "__main__":
     gt = json.loads(GROUND_TRUTH_PATH.read_text())
+    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
     with session() as conn:
-        scores = evaluate(conn, gt)
+        scores = evaluate(conn, gt, client)
 
     winner = max(scores, key=lambda k: scores[k][1])  # best MRR@5
 

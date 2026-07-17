@@ -34,14 +34,14 @@ lookup at all:
 - **`agent` node**: calls `gpt-4o-mini` with the `search_travel_kb` tool
   bound. For greetings/small talk/off-topic questions the model answers
   directly with no tool call - no wasted DB round-trip. For travel
-  questions it emits a tool call, and in doing so also rephrases the raw
-  user question into a focused search query (query rewriting, effectively
-  free from the tool-calling itself).
-- **`tools` node**: runs `search_travel_kb` - embeds the query, hybrid-searches
-  the knowledge base (reciprocal rank fusion of pgvector cosine search +
-  Postgres full-text search), reranks the candidate pool with a
-  cross-encoder, and returns the top `TOP_K` chunks. Results are appended
-  to the conversation as a tool message and the graph loops back to `agent`.
+  questions it emits a tool call with a search query drawn from the
+  question.
+- **`tools` node**: runs `search_travel_kb` - rewrites the query (see
+  "Query rewriting" below), embeds it, hybrid-searches the knowledge base
+  (reciprocal rank fusion of pgvector cosine search + Postgres full-text
+  search), reranks the candidate pool with a cross-encoder, and returns the
+  top `TOP_K` chunks. Results are appended to the conversation as a tool
+  message and the graph loops back to `agent`.
 - **System prompt** (`SYSTEM_PROMPT` in `rag_graph.py`) instructs the model
   to answer strictly from retrieved chunks or prior conversation history -
   never its own general/world knowledge, even when it "knows" the answer -
@@ -71,6 +71,7 @@ src/
 ├── tests/           pytest unit tests, class-based, no live DB/API calls
 ├── config.py        all tuning constants (model names, TOP_K, chunk size, pricing, RRF k)
 ├── embedding.py     embed_query/embed_documents/rerank_chunks (fastembed, cached singletons)
+├── query_rewrite.py rewrite_query - LLM query rewriting, gated by QUERY_REWRITE_ENABLED
 └── logger.py        loguru setup (dev: colorized DEBUG, prod: plain INFO via ENV_TYPE)
 ```
 
@@ -92,9 +93,14 @@ baseline:
   evaluation, see [evaluation.md](evaluation.md).
 - **Reranking** - a cross-encoder (`Xenova/ms-marco-MiniLM-L-6-v2`) reranks
   a 20-candidate hybrid pool down to the top 5 before generation.
-- **Query rewriting** - a side effect of agentic tool-calling: the model
-  rephrases the user's raw question into a focused search query before
-  calling the tool.
+- **Query rewriting** - a dedicated `gpt-4o-mini` call
+  (`src/query_rewrite.py:rewrite_query`) rewrites the tool's `query` argument
+  into a sharper standalone search query (fixes typos, expands
+  abbreviations, resolves vague phrasing) before embedding/search.
+  Toggleable via `Config.Retrieval.QUERY_REWRITE_ENABLED`
+  (`QUERY_REWRITE_ENABLED` env var) without an image rebuild - **on by
+  default**, despite scoring slightly below plain hybrid+rerank on this
+  ground truth, see [evaluation.md](evaluation.md) for why.
 - **Agentic RAG** - not one of the course's five named techniques, but a
   real improvement over a fixed pipeline: the model decides whether
   retrieval is needed at all, rather than always retrieving.

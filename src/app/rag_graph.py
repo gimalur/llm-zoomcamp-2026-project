@@ -12,6 +12,7 @@ from loguru import logger as LOGGER
 from config import Config
 from db import RagRepository, session
 from embedding import embed_query, rerank_chunks
+from query_rewrite import get_client, rewrite_query
 
 MAX_TOOL_ROUNDS = 3
 
@@ -32,19 +33,29 @@ SYSTEM_PROMPT = """
 """.strip()
 
 
+def _resolve_search_query(query: str) -> str:
+    """Rewrite `query` into a sharper standalone search query, unless disabled via config."""
+    if not Config.Retrieval.QUERY_REWRITE_ENABLED:
+        return query
+    return rewrite_query(get_client(), query)
+
+
 @tool(response_format="content_and_artifact")
 def search_travel_kb(query: str) -> tuple[str, list[dict]]:
     """Search the travel knowledge base for destination, culture, food, or transport info."""
-    embedding = embed_query(query)
+    search_query = _resolve_search_query(query)
+
+    embedding = embed_query(search_query)
     with session() as conn:
         candidates = RagRepository(conn).hybrid_search(
-            embedding, query, top_k=Config.Retrieval.RERANK_CANDIDATE_K, rrf_k=Config.Retrieval.RRF_K
+            embedding, search_query, top_k=Config.Retrieval.RERANK_CANDIDATE_K, rrf_k=Config.Retrieval.RRF_K
         )
-    results = rerank_chunks(query, candidates, top_k=Config.Retrieval.TOP_K)
+    results = rerank_chunks(search_query, candidates, top_k=Config.Retrieval.TOP_K)
 
     LOGGER.info(
-        "tool_call=search_travel_kb query={!r} count={} titles={}",
+        "tool_call=search_travel_kb query={!r} rewritten={!r} count={} titles={}",
         query,
+        search_query,
         len(results),
         [c["title"] for c in results],
     )

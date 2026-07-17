@@ -14,6 +14,7 @@ All read from `.env` (see `.env.example` at the repo root - copy it to
 | `POSTGRES_PASSWORD` | `password` | Postgres container + app DB connection |
 | `POSTGRES_HOST` | `postgres-zoom` | App DB connection (container hostname on the compose network) |
 | `GRAFANA_URL` | `http://localhost:3001` | Referenced by the Grafana header link |
+| `QUERY_REWRITE_ENABLED` | `true` | `src/query_rewrite.py` - toggles LLM query rewriting in `search_travel_kb`, no rebuild needed |
 
 Postgres variables already default to working values for local dev - only
 `OPENAI_API_KEY` needs to be filled in for a first run.
@@ -33,6 +34,7 @@ rather than being scattered across files:
 | `Retrieval.RRF_K` | `60` | Reciprocal-rank-fusion constant (standard default) |
 | `Retrieval.RERANK_MODEL` | `Xenova/ms-marco-MiniLM-L-6-v2` | Cross-encoder reranker |
 | `Retrieval.RERANK_CANDIDATE_K` | `20` | Hybrid-search candidate pool size before rerank cuts to `TOP_K` |
+| `Retrieval.QUERY_REWRITE_ENABLED` | `true` (from `QUERY_REWRITE_ENABLED` env var) | Gate for LLM query rewriting before search |
 | `Eval.SAMPLES_PER_DOCUMENT` | `5` | Ground-truth questions sampled per ingested article |
 
 ## Key dependency versions (from `uv.lock`)
