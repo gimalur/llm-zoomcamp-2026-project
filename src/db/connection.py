@@ -17,7 +17,7 @@ def get_connection():
 
 
 @contextmanager
-def session():
+def db_session():
     """Open a connection for the block's lifetime and always close it after."""
     conn = get_connection()
     try:

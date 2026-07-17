@@ -1,4 +1,4 @@
-from db import ConversationRepository, session
+from db import ConversationRepository, db_session
 
 
 def drop(conn) -> None:
@@ -6,6 +6,6 @@ def drop(conn) -> None:
 
 
 if __name__ == "__main__":
-    with session() as conn:
+    with db_session() as conn:
         drop(conn)
     print("Dropped all rows from conversations and feedback.")

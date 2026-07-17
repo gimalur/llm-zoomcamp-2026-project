@@ -77,7 +77,7 @@ src/
 
 Persistence is two repository classes (`db/rag_data.py:RagRepository`,
 `db/conversations.py:ConversationRepository`), each constructed with a
-connection and holding it for the life of a `with db.session():` block -
+connection and holding it for the life of a `with db.db_session():` block -
 no `conn`-threading through free functions, no self-connecting wrapper
 duplication. See `ARCHITECTURE.md` at the repo root for the full review
 and refactor history that produced this shape (kept as a standing design

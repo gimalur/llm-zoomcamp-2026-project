@@ -1,4 +1,4 @@
-from .connection import get_connection, session
+from .connection import db_session, get_connection
 from .conversations import ConversationRepository
 from .rag_data import RagRepository
 
@@ -11,7 +11,7 @@ def clear(conn) -> None:
 
 __all__ = [
     "get_connection",
-    "session",
+    "db_session",
     "clear",
     "ConversationRepository",
     "RagRepository",

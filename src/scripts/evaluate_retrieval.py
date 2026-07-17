@@ -5,7 +5,7 @@ from pathlib import Path
 from openai import OpenAI
 
 from config import Config
-from db import session
+from db import db_session
 from evaluation.retrieval import evaluate
 
 GROUND_TRUTH_PATH = Path(__file__).resolve().parent.parent.parent / "eval" / "ground_truth.json"
@@ -15,7 +15,7 @@ RESULTS_PATH = Path(__file__).resolve().parent.parent.parent / "eval" / "retriev
 if __name__ == "__main__":
     gt = json.loads(GROUND_TRUTH_PATH.read_text())
     client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    with session() as conn:
+    with db_session() as conn:
         scores = evaluate(conn, gt, client)
 
     winner = max(scores, key=lambda k: scores[k][1])  # best MRR@5

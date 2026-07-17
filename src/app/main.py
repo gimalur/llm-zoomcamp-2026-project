@@ -6,7 +6,7 @@ from fastapi.responses import PlainTextResponse
 from loguru import logger as LOGGER
 
 from config import Config
-from db import ConversationRepository, session
+from db import ConversationRepository, db_session
 from db import clear as clear_db
 from ingestion.fixtures import seed as ingest_fake_data
 from ingestion.wikivoyage import ingest as ingest_data
@@ -43,7 +43,7 @@ def custom_route(path: str):
 async def action_ingest_fake_db():
     # Backs the "Ingest fake data" header link in app/.chainlit/config.toml -
     # a screen-level control outside the chat message flow.
-    with session() as conn:
+    with db_session() as conn:
         ingest_fake_data(conn)
     return PlainTextResponse(
         "Seeded fake conversations and feedback. You can close this tab."
@@ -55,7 +55,7 @@ async def action_ingest_data():
     # Backs the "Ingest Data" header link - fetches and embeds the
     # curated knowledge-base documents. Can take a while (rate-limited)
     # and is safe to rerun: already-ingested documents are skipped.
-    with session() as conn:
+    with db_session() as conn:
         n = ingest_data(conn)
     return PlainTextResponse(f"Ingested {n} new documents. You can close this tab.")
 
@@ -64,7 +64,7 @@ async def action_ingest_data():
 async def action_clear_db():
     # Backs the "Clear DB" header link - full reset (conversations,
     # feedback, articles, chunks). Use "Load Articles" to refill afterwards.
-    with session() as conn:
+    with db_session() as conn:
         clear_db(conn)
     return PlainTextResponse("Cleared all tables. You can close this tab.")
 
@@ -86,7 +86,7 @@ def make_feedback_actions(conversation_id: int) -> list[cl.Action]:
     )
 
     async def handle_vote(action: cl.Action):
-        with session() as conn:
+        with db_session() as conn:
             ConversationRepository(conn).save_feedback(
                 conversation_id=conversation_id,
                 source="user",
@@ -116,7 +116,7 @@ async def on_message(message: cl.Message):
     if sources:
         answer += "\n\n*Sources: " + ", ".join(sources) + "*"
 
-    with session() as conn:
+    with db_session() as conn:
         conversation_id = ConversationRepository(conn).save(
             thread_id=thread_id,
             question=question,

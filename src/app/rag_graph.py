@@ -10,7 +10,7 @@ from langgraph.graph import END, START, MessagesState, StateGraph
 from loguru import logger as LOGGER
 
 from config import Config
-from db import RagRepository, session
+from db import RagRepository, db_session
 from embedding import embed_query, rerank_chunks
 from query_rewrite import get_client, rewrite_query
 
@@ -46,7 +46,7 @@ def search_travel_kb(query: str) -> tuple[str, list[dict]]:
     search_query = _resolve_search_query(query)
 
     embedding = embed_query(search_query)
-    with session() as conn:
+    with db_session() as conn:
         candidates = RagRepository(conn).hybrid_search(
             embedding, search_query, top_k=Config.Retrieval.RERANK_CANDIDATE_K, rrf_k=Config.Retrieval.RRF_K
         )
