@@ -11,6 +11,21 @@ Wikivoyage), instead of relying on the LLM's own general knowledge -
 answers cite which article(s) they came from, and the assistant says so
 plainly when it doesn't have relevant information rather than guessing.
 
+## System components
+
+```mermaid
+flowchart LR
+    subgraph chat-zoom
+        UI["Chainlit UI<br/>app/main.py"]
+        Agent["RagAgent<br/>LangGraph, app/rag_graph.py"]
+    end
+    UI <--> Agent
+    Agent -->|hybrid search + rerank| PG[("Postgres + pgvector<br/>postgres-zoom")]
+    Agent -->|chat / query rewrite / eval judge| OpenAI[["OpenAI gpt-4o-mini"]]
+    UI -->|save conversation + feedback| PG
+    PG --> Grafana["Grafana dashboard<br/>grafana-zoom"]
+```
+
 ## Retrieval → generation flow
 
 The chat is not a fixed `retrieve → generate` pipeline. It's an agentic
@@ -18,17 +33,12 @@ LangGraph graph (`src/app/rag_graph.py`, class `RagAgent`) where the LLM
 itself decides, per message, whether the question needs a knowledge-base
 lookup at all:
 
-```
-        ┌─────────┐
- START →│  agent  │───(no tool call)───→ END (answer as-is)
-        └────┬────┘
-             │ tool call requested
-             ▼
-        ┌─────────┐
-        │  tools  │  runs search_travel_kb, appends results to state
-        └────┬────┘
-             │
-             └──────────────→ back to agent (up to MAX_TOOL_ROUNDS = 3)
+```mermaid
+flowchart TD
+    START([START]) --> agent{agent node}
+    agent -->|no tool call| END([END: answer as-is])
+    agent -->|tool call requested| tools["tools node<br/>runs search_travel_kb"]
+    tools -->|up to MAX_TOOL_ROUNDS = 3| agent
 ```
 
 - **`agent` node**: calls `gpt-4o-mini` with the `search_travel_kb` tool
