@@ -51,6 +51,19 @@ docker compose up -d --build
 | Grafana | http://localhost:3001 (`admin` / `admin`, prompts for a password change) |
 | Postgres | localhost:5433 |
 
+## Screenshots
+
+**Chat UI**
+![Chat UI](docs/chat-ui.png)
+
+**Header buttons** (top-right corner of the chat UI) - Grafana (opens
+dashboard), Ingest fake data, Ingest Data, Clear DB:
+![Header buttons](docs/buttons.png)
+
+**Grafana dashboard**
+![Grafana dashboard](docs/grafana-1.png)
+![Grafana dashboard](docs/grafana-2.png)
+
 ## First launch - load the knowledge base
 
 The knowledge base is **empty** on a fresh start - the chat will run, but
@@ -65,10 +78,11 @@ Fetches ~20 curated Wikivoyage destination articles, chunks and embeds
 them into Postgres. Idempotent and resumable - safe to rerun (already-ingested
 articles are skipped), useful if it gets interrupted by Wikivoyage's rate
 limiting. Takes a couple of minutes. You can also trigger this from the
-chat UI itself via the **Ingest Data** header link.
+chat UI itself via the **Ingest Data** button, top-right corner (see
+screenshot above).
 
 Optionally, populate Grafana with demo rows (fake conversations/feedback,
-no real LLM calls) via the **Ingest fake data** header link or:
+no real LLM calls) via the **Ingest fake data** button (same corner) or:
 
 ```bash
 make db-ingest-fake
@@ -76,11 +90,15 @@ make db-ingest-fake
 
 ## Everyday commands
 
+All of these run via `docker compose exec` - containers must already be up
+(`docker compose up -d --build`) before running any of them, `make db-ingest*`
+and `make eval-all` included.
+
 ```bash
 make test              # run the pytest suite (unit tests, no live DB/API calls)
-make db-ingest          # (re)load the Wikivoyage knowledge base
-make db-ingest-fake     # seed fake conversations + feedback (Grafana demo data)
-make db-clear           # full reset: conversations + feedback + knowledge base
+make db-ingest          # (re)load the Wikivoyage knowledge base (or "Ingest Data" button)
+make db-ingest-fake     # seed fake conversations + feedback (or "Ingest fake data" button)
+make db-clear           # full reset: conversations + feedback + knowledge base (or "Clear DB" button)
 make eval-all           # regenerate ground truth, score retrieval, score answer quality
 make sync               # uv sync, for local (non-Docker) dependency install
 ```
@@ -102,5 +120,4 @@ docker compose down -v   # stop containers and delete volumes (wipes Postgres/Gr
 - [`docs/architecture.md`](docs/architecture.md) - problem statement, the agentic retrieval/generation flow, code layout, best practices applied
 - [`docs/evaluation.md`](docs/evaluation.md) - retrieval and LLM-as-judge evaluation methodology and results
 - [`docs/configuration.md`](docs/configuration.md) - environment variables, tunable constants, dependency versions
-- [`docs/screenshots.md`](docs/screenshots.md) - chat UI / Grafana screenshots (manual TODO)
-- [`ARCHITECTURE.md`](ARCHITECTURE.md) - standing design record of an OOP refactor pass (repository classes, `RagAgent`) - code review history, not day-to-day reading
+

@@ -40,15 +40,32 @@
     },
     {
       "id": 3,
-      "type": "piechart",
-      "title": "Feedback Relevance",
-      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
+      "type": "stat",
+      "title": "Positive Feedback",
+      "gridPos": { "h": 9, "w": 6, "x": 12, "y": 9 },
       "datasource": { "type": "postgres", "uid": "postgresql" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } }, "overrides": [] },
       "targets": [
         {
           "datasource": { "type": "postgres", "uid": "postgresql" },
           "format": "table",
-          "rawSql": "SELECT relevance, COUNT(*) AS count FROM feedback WHERE relevance IS NOT NULL GROUP BY relevance",
+          "rawSql": "SELECT COUNT(*) AS count FROM feedback WHERE score > 0",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Negative Feedback",
+      "gridPos": { "h": 9, "w": 6, "x": 18, "y": 9 },
+      "datasource": { "type": "postgres", "uid": "postgresql" },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgresql" },
+          "format": "table",
+          "rawSql": "SELECT COUNT(*) AS count FROM feedback WHERE score < 0",
           "refId": "A"
         }
       ]
