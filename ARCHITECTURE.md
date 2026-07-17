@@ -163,9 +163,9 @@ independently rather than as one big-bang rewrite.
    `src/devdata/fixtures.py` (finding #5 - low priority, do opportunistically).
 
 **Verify:** `make db-ingest`, the three Chainlit header actions (Ingest Data /
-Ingest fake data / Clear DB), and `make eval-questions` / `eval-retrieval` /
-`eval-llm` all still work unchanged - this phase is pure move/dedup, zero
-behavior change, so any diff in output is a bug.
+Ingest fake data / Clear DB), and `make eval-all` all still work unchanged -
+this phase is pure move/dedup, zero behavior change, so any diff in output
+is a bug.
 
 ### Phase B - Repository classes (the core OOP ask)
 
@@ -197,7 +197,7 @@ This is the change that makes finding #1 (no tests) tractable: tests can now
 construct a repository against a throwaway/mock connection instead of needing
 every DB function to be monkeypatched individually.
 
-**Verify:** re-run `make eval-retrieval` and confirm the hybrid+rerank numbers
+**Verify:** re-run `make eval-all` and confirm the hybrid+rerank numbers
 match the currently-committed `eval/retrieval_results.md` (0.930/0.897) -
 identical numbers confirm the repository extraction changed no behavior.
 
@@ -224,7 +224,7 @@ Encapsulate the seven responsibilities from finding #4 into one class:
   encapsulated, wrap it as a small dedicated callable class implementing
   LangChain's tool protocol - do not contort `RagAgent` itself to own it.
 
-**Verify:** re-run `make eval-llm` and confirm results are in the same
+**Verify:** re-run `make eval-all` and confirm results are in the same
 ballpark as the current `eval/llm_results.md` (thorough ~85% RELEVANT / ~95%
 tool-called) - this is a live-LLM eval so exact numbers will vary run to run,
 but a large regression (e.g. tool-called % dropping) signals the checkpointer

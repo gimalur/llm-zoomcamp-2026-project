@@ -80,18 +80,15 @@ make db-ingest-fake
 make test              # run the pytest suite (unit tests, no live DB/API calls)
 make db-ingest          # (re)load the Wikivoyage knowledge base
 make db-ingest-fake     # seed fake conversations + feedback (Grafana demo data)
-make db-drop            # truncate conversations + feedback only
 make db-clear           # full reset: conversations + feedback + knowledge base
-make eval-questions     # regenerate eval/ground_truth.json from the current knowledge base
-make eval-retrieval     # score retrieval strategies against ground truth
-make eval-llm           # score answer quality (LLM-as-judge) across prompt variants
-make shell-chat         # bash shell inside the chat container
-make shell-db           # psql shell inside postgres
+make eval-all           # regenerate ground truth, score retrieval, score answer quality
 make sync               # uv sync, for local (non-Docker) dependency install
 ```
 
-`make eval-*` results are written to `eval/*.md` and summarized in
-[`docs/evaluation.md`](docs/evaluation.md).
+`make eval-all` writes results to `eval/*.md`, summarized in
+[`docs/evaluation.md`](docs/evaluation.md). Need a bash/psql shell instead?
+`docker compose exec chat-zoom bash` / `docker compose exec postgres-zoom psql
+-U $POSTGRES_USER -d $POSTGRES_DB`.
 
 ## Stop
 
